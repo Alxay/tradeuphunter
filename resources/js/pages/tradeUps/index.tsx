@@ -1,6 +1,5 @@
 import { Head, InfiniteScroll, usePage } from '@inertiajs/react';
 import { dashboard } from '@/routes';
-import { Button } from '@/components/ui/button';
 import axios from 'axios';
 import { useEffect, useRef, useState } from 'react';
 
@@ -41,7 +40,16 @@ interface Collection {
     image_url: string;
 }
 
-export default function index({ apiData, collections, rarities }: Props) {
+Index.layout = {
+    breadcrumbs: [
+        {
+            title: 'TradeUps',
+            href: dashboard(),
+        },
+    ],
+};
+
+export default function Index({ apiData, collections, rarities }: Props) {
     //const skins = apiData.data;
     // console.log(collections);
     // console.log(rarities);
@@ -69,15 +77,18 @@ export default function index({ apiData, collections, rarities }: Props) {
             )
             .then((response) => {
                 console.log('API Response:', response.data);
-                if (response.data.data && response.data.data.length === 0) {
-                }
                 setSkins(response.data.data);
                 setLastPage(response.data.last_page || 1);
                 setCurrentPage(response.data.current_page);
-                setIsLoadingMore(false);
 
                 console.log('Current Page:', response.data.current_page);
                 console.log('Last Page:', response.data.last_page);
+            })
+            .catch((error) => {
+                console.error('Failed to load skins:', error);
+            })
+            .finally(() => {
+                setIsLoadingMore(false);
             });
     }, [collectionFilter, rarityFilter]);
 
@@ -105,7 +116,6 @@ export default function index({ apiData, collections, rarities }: Props) {
                         setSkins((prevSkins) => [...prevSkins, ...newSkins]); // Dodajemy je do istniejących
                         setCurrentPage(response.data.current_page); // Zwiększamy numer strony
                         setLastPage(response.data.last_page);
-                        setIsLoadingMore(false);
 
                         console.log(
                             'Current Page:',
@@ -117,16 +127,24 @@ export default function index({ apiData, collections, rarities }: Props) {
                         //         response.data.current_page,
                         //     );
                         //    console.log('Last Page:', response.data.last_page);
+                    })
+                    .catch((error) => {
+                        console.error('Failed to load more skins:', error);
+                    })
+                    .finally(() => {
+                        setIsLoadingMore(false);
                     });
             }
         });
 
-        if (loadMoreRef.current) {
-            observer.observe(loadMoreRef.current);
+        const loadMoreElement = loadMoreRef.current;
+
+        if (loadMoreElement) {
+            observer.observe(loadMoreElement);
         }
         return () => {
-            if (loadMoreRef.current) {
-                observer.unobserve(loadMoreRef.current);
+            if (loadMoreElement) {
+                observer.unobserve(loadMoreElement);
             }
         };
     }, [currentPage, lastPage, collectionFilter, rarityFilter, isLoadingMore]);
@@ -208,12 +226,3 @@ export default function index({ apiData, collections, rarities }: Props) {
         </>
     );
 }
-
-index.layout = {
-    breadcrumbs: [
-        {
-            title: 'Dashboard',
-            href: dashboard(),
-        },
-    ],
-};
