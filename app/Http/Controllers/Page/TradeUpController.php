@@ -12,6 +12,8 @@ class TradeUpController extends Controller
     {
         $dataManager = new DataManager();
         $apiData = $dataManager->getSkins();
-        return inertia('tradeUps/index', compact('apiData'));        
+        $collections = $dataManager->getCollections();
+        $rarities = $dataManager->getRarities();
+        return inertia('tradeUps/index', compact('apiData', 'collections', 'rarities'));        
     }
 }

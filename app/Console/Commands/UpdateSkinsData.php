@@ -59,13 +59,15 @@ class UpdateSkinsData extends Command
             );
 
             // Rarity
-            $rarity = \App\Models\Rarity::updateOrCreate(
-                ['api_id' => $item['rarity']['id']],
-                [
-                    'name' => $item['rarity']['name'],
-                    'color_hex' => $item['rarity']['color']
-                ]
-            );
+            // $rarity = \App\Models\Rarity::updateOrCreate(
+            //     ['api_id' => $item['rarity']['id']],
+            //     [
+            //         'name' => $item['rarity']['name'],
+            //         'color_hex' => $item['rarity']['color']
+            //     ]
+            // );
+            // ['name' => 'Covert','color_hex' => '#eb4b4b', 'api_id' => 'rarity_ancient_weapon'],
+            $rarity = Rarity::where('api_id', $item['rarity']['id'])->first();
 
             // Collection
             $collData = $item['collections'][0];
