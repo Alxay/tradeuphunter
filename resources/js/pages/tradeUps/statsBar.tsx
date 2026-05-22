@@ -40,7 +40,7 @@ export default function StatsBar({
                 <p>
                     Oczekiwany zysk:{' '}
                     {expectedProfit !== null
-                        ? expectedProfit.toFixed(2) + '%'
+                        ? expectedProfit.toFixed(2) + ' $'
                         : 'N/A'}
                 </p>
             </div>

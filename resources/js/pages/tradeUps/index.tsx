@@ -1,4 +1,4 @@
-import { Head, InfiniteScroll, usePage } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import { dashboard } from '@/routes';
 import axios from 'axios';
 import { useEffect, useMemo, useState } from 'react';
@@ -19,24 +19,18 @@ interface Skin {
     image_url: string;
     min_float: number;
     max_float: number;
-    rarity: Rarity; // Zagnieżdżony obiekt rarity
+    rarity: Rarity;
     collection_id: number;
     price: number;
+    condition?: string | null;
+    statTrak: boolean;
 }
-
-// Skoro Laravel zwraca paginację, struktura wygląda tak:
 
 interface ApiData {
     current_page: number;
-    data: Skin[]; // Tu są Twoje skiny
+    data: Skin[];
     total?: number;
     last_page?: number;
-}
-
-interface Props {
-    apiData: ApiData;
-    collections: Collection[];
-    rarities: Rarity[];
 }
 
 interface Collection {
@@ -44,6 +38,12 @@ interface Collection {
     name: string;
     api_id: number;
     image_url: string;
+}
+
+interface Props {
+    apiData: ApiData;
+    collections: Collection[];
+    rarities: Rarity[];
 }
 
 Index.layout = {
@@ -57,19 +57,69 @@ Index.layout = {
 
 export default function Index({ apiData, collections, rarities }: Props) {
     const [selectingSkin, setSelectingSkin] = useState(false);
+    const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
     const [selectedSkins, setSelectedSkins] = useState<(Skin | null)[]>(
         Array(10).fill(null),
     );
-    const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
-    const [contractRarity, setContractRarity] = useState<Rarity | null>(null);
-
     const [outputSkins, setOutputSkins] = useState<Skin[]>([]);
-    const [EV, setEV] = useState<number | null>(null);
-    const [inputCost, setInputCost] = useState<number | null>(null);
-    const [expectedReturn, setExpectedReturn] = useState<number | null>(null);
-    const [ROI, setROI] = useState<number | null>(null);
-    const [chanceForProfit, setChanceForProfit] = useState<number | null>(null);
-    const [expectedProfit, setExpectedProfit] = useState<number | null>(null);
+
+    // 1. Dynamicznie sprawdzamy rzadkość na podstawie pierwszego wrzuconego skina
+    const contractRarity = useMemo(() => {
+        const firstSkin = selectedSkins.find((s) => s !== null);
+        return firstSkin ? firstSkin.rarity : null;
+    }, [selectedSkins]);
+
+    const contractStatTrak = useMemo(() => {
+        const firstSkin = selectedSkins.find((s) => s !== null);
+        return firstSkin ? firstSkin.statTrak : null;
+    }, [selectedSkins]);
+
+    // 2. Czy kontrakt ma komplet 10 skinów
+    const isFull = useMemo(
+        () => selectedSkins.every((s) => s !== null),
+        [selectedSkins],
+    );
+
+    // 3. Jedyne źródło prawdy dla statystyk (Brak useState dla pojedynczych liczb!)
+    const stats = useMemo(() => {
+        const inputCost = selectedSkins.reduce(
+            (sum, skin) => sum + (skin?.price || 0),
+            0,
+        );
+
+        if (outputSkins.length === 0) {
+            return {
+                ev: 0,
+                inputCost,
+                expectedReturn: 0,
+                roi: 0,
+                chanceForProfit: 0,
+                expectedProfit: 0,
+            };
+        }
+
+        const ev =
+            outputSkins.reduce((sum, skin) => sum + (skin.price || 0), 0) /
+            outputSkins.length;
+
+        const roi = inputCost > 0 ? ((ev - inputCost) / inputCost) * 100 : 0;
+
+        const profitSkinsCount = outputSkins.filter(
+            (skin) => (skin.price || 0) > inputCost,
+        ).length;
+
+        const chanceForProfit = (profitSkinsCount / outputSkins.length) * 100;
+        const expectedProfit = ev - inputCost;
+
+        return {
+            ev,
+            inputCost,
+            expectedReturn: ev,
+            roi,
+            chanceForProfit,
+            expectedProfit,
+        };
+    }, [selectedSkins, outputSkins]);
 
     function openPicker(index: number) {
         setSelectedSlot(index);
@@ -83,21 +133,29 @@ export default function Index({ apiData, collections, rarities }: Props) {
             next[selectedSlot] = skin;
             return next;
         });
-        setContractRarity(skin.rarity);
         setSelectingSkin(false);
         setSelectedSlot(null);
     }
 
-    const isFull = useMemo(
-        () => selectedSkins.every((s) => s !== null),
-        [selectedSkins],
-    );
+    function delSkin(index: number) {
+        console.log('Usuwam skina z indexu:', index);
+        setSelectedSkins((prev) => {
+            const next = [...prev];
+            next[index] = null;
+            return next;
+        });
+    }
 
+    // 4. Pobieranie danych z API z poprawnymi zależnościami
     useEffect(() => {
-        if (!isFull) return;
-        const avgFloat = 0.2;
+        if (!isFull) {
+            if (outputSkins.length > 0) setOutputSkins([]); // Czyścimy wyniki, jeśli wyciągnięto skina
+            return;
+        }
+
+        const avgFloat = 0.2; // TODO: w przyszłości podepnij pod realny suwak/stan
         const rarityId = contractRarity ? contractRarity.id : 1;
-        // kolekcje musza byc UNIKALNE
+
         const collectionIds = Array.from(
             new Set(selectedSkins.map((s) => s!.collection_id)),
         );
@@ -112,65 +170,49 @@ export default function Index({ apiData, collections, rarities }: Props) {
                 },
             })
             .then((response) => {
-                console.log('Tradeup results:', response.data);
                 setOutputSkins(response.data);
-                var ev =
-                    response.data.reduce(
-                        (sum: number, skin: Skin) => sum + (skin.price || 0),
-                        0,
-                    ) / response.data.length;
-                setEV(ev);
-                var inputCost = selectedSkins.reduce(
-                    (sum, skin) => sum + (skin?.price || 0),
-                    0,
-                );
-                setInputCost(inputCost);
-                setExpectedReturn(ev);
-                setROI(
-                    inputCost > 0 ? ((ev - inputCost) / inputCost) * 100 : null,
-                );
-                setChanceForProfit(
-                    (response.data.filter(
-                        (skin: Skin) => (skin.price || 0) > inputCost,
-                    ).length /
-                        response.data.length) *
-                        100,
-                );
-                setExpectedProfit(
-                    (response.data.filter(
-                        (skin: Skin) => (skin.price || 0) > inputCost,
-                    ).length /
-                        response.data.length) *
-                        100,
-                );
             })
             .catch((error) => {
                 console.error('Error fetching tradeup results:', error);
             });
-    }, [isFull]);
+        // selectedSkins musi tu być, by zmiana dowolnego skina przy pełnym kontrakcie wysłała nowe zapytanie
+    }, [isFull, selectedSkins, contractRarity]);
+
+    function duplicateSkin(skin: unknown) {
+        for (let i = 0; i < 10; i++) {
+            if (selectedSkins[i] === null) {
+                setSelectedSkins((prev) => {
+                    const next = [...prev];
+                    next[i] = skin as Skin;
+                    return next;
+                });
+                break;
+            }
+        }
+    }
 
     return (
         <>
             <Head title="Dashboard" />
-            {/*Page Content*/}
             <div className="min-h-[80vh] bg-[#0B0E14] p-6 text-white">
-                {/*Header*/}
+                {/* Przekazujemy wartości bezpośrednio z obiektu stats */}
                 <StatsBar
-                    EV={EV}
-                    inputCost={inputCost}
-                    expectedReturn={expectedReturn}
-                    ROI={ROI}
-                    chanceForProfit={chanceForProfit}
-                    expectedProfit={expectedProfit}
+                    EV={stats.ev}
+                    inputCost={stats.inputCost}
+                    expectedReturn={stats.expectedReturn}
+                    ROI={stats.roi}
+                    chanceForProfit={stats.chanceForProfit}
+                    expectedProfit={stats.expectedProfit}
                 />
-                {/*TradeUp area*/}
+
                 <div className="flex gap-6">
-                    {/*Left div with input skins*/}
                     <InputArea
                         skins={selectedSkins}
+                        reset={() => setSelectedSkins(Array(10).fill(null))}
                         onSlotClick={(i) => openPicker(i)}
+                        duplicateSkin={duplicateSkin}
+                        delSkin={delSkin}
                     />
-                    {/*Right div with output skins*/}
                     <OutputArea outputSkins={outputSkins} />
                 </div>
             </div>
@@ -180,6 +222,7 @@ export default function Index({ apiData, collections, rarities }: Props) {
                 collections={collections}
                 rarities={rarities}
                 contractRarity={contractRarity}
+                contractStatTrak={contractStatTrak}
                 onSelect={handleSkinSelect}
                 onClose={() => setSelectingSkin(false)}
                 visible={selectingSkin && selectedSlot !== null}

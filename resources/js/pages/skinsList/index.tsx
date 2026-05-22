@@ -1,5 +1,6 @@
-import axios from 'axios';
+import { Head } from '@inertiajs/react';
 import { dashboard } from '@/routes';
+import axios from 'axios';
 import { useEffect, useRef, useState } from 'react';
 
 interface Rarity {
@@ -15,9 +16,7 @@ interface Skin {
     min_float: number;
     max_float: number;
     rarity: Rarity; // Zagnieżdżony obiekt rarity
-    collection_id: number;
     price: number;
-    condition?: string | null;
     statTrak: boolean;
 }
 
@@ -34,11 +33,6 @@ interface Props {
     apiData: ApiData;
     collections: Collection[];
     rarities: Rarity[];
-    contractRarity: Rarity | null;
-    contractStatTrak: boolean | null;
-    onSelect: (skin: Skin) => void;
-    onClose: () => void;
-    visible: boolean;
 }
 
 interface Collection {
@@ -48,26 +42,7 @@ interface Collection {
     image_url: string;
 }
 
-SelectSkin.layout = {
-    breadcrumbs: [
-        {
-            title: 'TradeUps',
-            href: dashboard(),
-        },
-    ],
-};
-
-// export default function SelectSkin({ apiData, collections, rarities }: Props) {
-export default function SelectSkin({
-    apiData,
-    collections,
-    rarities,
-    contractRarity,
-    contractStatTrak,
-    onSelect,
-    onClose,
-    visible,
-}: Props) {
+export default function index({ apiData, collections, rarities }: Props) {
     //const skins = apiData.data;
     // console.log(collections);
     // console.log(rarities);
@@ -80,22 +55,16 @@ export default function SelectSkin({
     const [collectionFilter, setCollectionFilter] = useState<string>('');
     const [rarityFilter, setRarityFilter] = useState<string>('');
     const [lastPage, setLastPage] = useState<number>(apiData.last_page || 1);
-    const [statTrakFilter, setStatTrakFilter] = useState<string>('0');
     const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
-    const [conditionFilter, setConditionFilter] =
-        useState<string>('Field-Tested');
+    const [conditionFilter, setConditionFilter] = useState<string>('');
+    const [statTrakFilter, setStatTrakFilter] = useState<string>('0');
     // console.log(rarities);
 
     useEffect(() => {
         setIsLoadingMore(true);
         setSkins([]);
         setCurrentPage(1);
-        console.log(
-            'Filters changed:',
-            collectionFilter,
-            rarityFilter,
-            conditionFilter,
-        );
+        console.log('Filters changed:', collectionFilter, rarityFilter);
         console.warn('PYTAM API');
         axios
             .get(
@@ -103,22 +72,15 @@ export default function SelectSkin({
             )
             .then((response) => {
                 console.log('API Response:', response.data);
-                const annotated = (response.data.data || []).map((s: any) => ({
-                    ...s,
-                }));
-                setSkins(annotated);
+                if (response.data.data && response.data.data.length === 0) {
+                }
+                setSkins(response.data.data);
                 setLastPage(response.data.last_page || 1);
                 setCurrentPage(response.data.current_page);
-                // setLastApiData(response.data);
+                setIsLoadingMore(false);
 
                 console.log('Current Page:', response.data.current_page);
                 console.log('Last Page:', response.data.last_page);
-            })
-            .catch((error) => {
-                console.error('Failed to load skins:', error);
-            })
-            .finally(() => {
-                setIsLoadingMore(false);
             });
     }, [collectionFilter, rarityFilter, conditionFilter, statTrakFilter]);
 
@@ -142,10 +104,11 @@ export default function SelectSkin({
                         `/api/skins?page=${currentPage + 1}&collection=${collectionFilter}&rarity=${rarityFilter}&condition=${conditionFilter}&statTrak=${statTrakFilter}`,
                     )
                     .then((response) => {
-                        const newSkins = response.data.data || []; // Pobieramy nowe skiny
+                        const newSkins = response.data.data; // Pobieramy nowe skiny
                         setSkins((prevSkins) => [...prevSkins, ...newSkins]); // Dodajemy je do istniejących
                         setCurrentPage(response.data.current_page); // Zwiększamy numer strony
                         setLastPage(response.data.last_page);
+                        setIsLoadingMore(false);
 
                         console.log(
                             'Current Page:',
@@ -157,25 +120,16 @@ export default function SelectSkin({
                         //         response.data.current_page,
                         //     );
                         //    console.log('Last Page:', response.data.last_page);
-                        // setLastApiData(response.data);
-                    })
-                    .catch((error) => {
-                        console.error('Failed to load more skins:', error);
-                    })
-                    .finally(() => {
-                        setIsLoadingMore(false);
                     });
             }
         });
 
-        const loadMoreElement = loadMoreRef.current;
-
-        if (loadMoreElement) {
-            observer.observe(loadMoreElement);
+        if (loadMoreRef.current) {
+            observer.observe(loadMoreRef.current);
         }
         return () => {
-            if (loadMoreElement) {
-                observer.unobserve(loadMoreElement);
+            if (loadMoreRef.current) {
+                observer.unobserve(loadMoreRef.current);
             }
         };
     }, [
@@ -189,31 +143,9 @@ export default function SelectSkin({
     ]);
 
     return (
-        <div
-            className="fixed inset-0 z-50 flex items-center justify-center"
-            style={{
-                visibility: visible ? 'visible' : 'hidden',
-                pointerEvents: visible ? 'auto' : 'none',
-            }}
-        >
-            <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-
-            <div
-                className="relative max-h-[80vh] w-[90vw] max-w-4xl overflow-auto rounded bg-[#0B0E14] p-4 text-white"
-                onClick={(e) => e.stopPropagation()}
-            >
-                <div className="mb-4 flex items-center justify-between">
-                    <h3 className="text-lg font-semibold">Wybierz skina</h3>
-                    <button
-                        className="ml-2 rounded bg-gray-700 px-2 py-1"
-                        onClick={() => {
-                            onClose();
-                        }}
-                    >
-                        Zamknij
-                    </button>
-                </div>
-
+        <>
+            <Head title="Dashboard" />
+            <div className="pageContent min-h-[80vh] bg-[#0B0E14] p-6 text-white">
                 <div
                     id="header"
                     className="mb-6 flex items-center justify-between"
@@ -231,41 +163,6 @@ export default function SelectSkin({
                             </option>
                         ))}
                     </select>
-
-                    <select
-                        className="rounded bg-[#1a1f29] p-2"
-                        value={rarityFilter}
-                        onChange={(e) => setRarityFilter(e.target.value)}
-                    >
-                        {!contractRarity ? (
-                            <>
-                                {rarities.map((rarity) => (
-                                    <option key={rarity.id} value={rarity.id}>
-                                        {rarity.name}
-                                    </option>
-                                ))}
-                            </>
-                        ) : (
-                            <option value={contractRarity.id}>
-                                {contractRarity.name}
-                            </option>
-                        )}
-                    </select>
-
-                    <div className="flex items-center">
-                        <input
-                            disabled={contractStatTrak != null}
-                            type="checkbox"
-                            id="statTrack"
-                            className="mr-2"
-                            checked={statTrakFilter === '1'}
-                            onChange={(e) =>
-                                setStatTrakFilter(e.target.checked ? '1' : '0')
-                            }
-                        />
-                        <label htmlFor="statTrack">StatTrak</label>
-                    </div>
-
                     <select
                         defaultValue={'Field-Tested'}
                         className="rounded bg-[#1a1f29] p-2"
@@ -278,16 +175,39 @@ export default function SelectSkin({
                         <option value="Minimal Wear">Minimal Wear</option>
                         <option value="Factory New">Factory New</option>
                     </select>
+
+                    <div>
+                        <input
+                            type="checkbox"
+                            id="stattrak"
+                            className="mr-2"
+                            checked={statTrakFilter === '1'}
+                            onChange={(e) =>
+                                setStatTrakFilter(e.target.checked ? '1' : '0')
+                            }
+                        />
+                        <label htmlFor="stattrak" className="mr-4">
+                            StatTrak
+                        </label>
+                    </div>
+                    <select
+                        className="rounded bg-[#1a1f29] p-2"
+                        value={rarityFilter}
+                        onChange={(e) => setRarityFilter(e.target.value)}
+                    >
+                        <option value="">Wszystkie rzadkości</option>
+
+                        {rarities.map((rarity) => (
+                            <option key={rarity.id} value={rarity.id}>
+                                {rarity.name}
+                            </option>
+                        ))}
+                    </select>
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                     {skins.map((skin) => (
                         <div
-                            onClick={() => {
-                                skin.condition = conditionFilter;
-                                onSelect(skin);
-                                onClose();
-                            }}
                             key={skin.id}
                             className="rounded-lg border border-gray-800 bg-[#1a1f29] p-4"
                         >
@@ -302,11 +222,11 @@ export default function SelectSkin({
                             <p style={{ color: skin.rarity.color_hex }}>
                                 {skin.rarity.name}
                             </p>
-                            <p className="mt-1 font-semibold">
-                                Cena: {skin.price}$
+                            <p className="text-sm text-gray-400">
+                                Cena: ${skin.price}
                             </p>
                             {skin.statTrak != false && (
-                                <p className="font-bold text-yellow-400">
+                                <p className="text-gold-400 font-bold text-yellow-400">
                                     StatTrak
                                 </p>
                             )}
@@ -330,6 +250,15 @@ export default function SelectSkin({
                     )}
                 </div>
             </div>
-        </div>
+        </>
     );
 }
+
+index.layout = {
+    breadcrumbs: [
+        {
+            title: 'Dashboard',
+            href: dashboard(),
+        },
+    ],
+};

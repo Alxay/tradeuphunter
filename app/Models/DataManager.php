@@ -26,6 +26,7 @@ class DataManager extends Model
                 ->where('is_stattrak', $statTrak)
                 ->first();
             $skin->price = $price ? $price->price_30d : null;
+            $skin->statTrak = $statTrak;
             return $skin;
         });
 
@@ -75,6 +76,7 @@ private function getConditionFromFloat(float $averageInputFloat, float $minFloat
                 ->where('is_stattrak', $statTrak)
                 ->first();
             $skin->price = $price ? $price->price_30d : null;
+            $skin->statTrak = $statTrak;
             return $skin;
         });
 

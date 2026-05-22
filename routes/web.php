@@ -10,7 +10,8 @@ Route::inertia('/', 'welcome', [
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'dashboard')->name('dashboard');
-    Route::get('tradeups', [TradeUpController::class, 'index'])->name('tradeups.index');
+    Route::get('tradeups', [TradeUpController::class, 'tradeUps'])->name('tradeups.index');
+    Route::get('skins', [TradeUpController::class, 'skinsList'])->name('skins.index');
 });
 
 
