@@ -1,7 +1,11 @@
 import { Head, InfiniteScroll, usePage } from '@inertiajs/react';
 import { dashboard } from '@/routes';
 import axios from 'axios';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import InputArea from './inputArea';
+import OutputArea from './outputArea';
+import StatsBar from './statsBar';
+import SelectSkin from './selectSkin';
 
 interface Rarity {
     id: number;
@@ -16,6 +20,8 @@ interface Skin {
     min_float: number;
     max_float: number;
     rarity: Rarity; // Zagnieżdżony obiekt rarity
+    collection_id: number;
+    price: number;
 }
 
 // Skoro Laravel zwraca paginację, struktura wygląda tak:
@@ -50,179 +56,134 @@ Index.layout = {
 };
 
 export default function Index({ apiData, collections, rarities }: Props) {
-    //const skins = apiData.data;
-    // console.log(collections);
-    // console.log(rarities);
-
-    const [skins, setSkins] = useState<Skin[]>(apiData.data);
-    const [currentPage, setCurrentPage] = useState<number>(
-        apiData.current_page,
+    const [selectingSkin, setSelectingSkin] = useState(false);
+    const [selectedSkins, setSelectedSkins] = useState<(Skin | null)[]>(
+        Array(10).fill(null),
     );
-    const loadMoreRef = useRef<HTMLDivElement | null>(null);
-    const [collectionFilter, setCollectionFilter] = useState<string>('');
-    const [rarityFilter, setRarityFilter] = useState<string>('');
-    const [lastPage, setLastPage] = useState<number>(apiData.last_page || 1);
-    const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
-    // console.log(rarities);
+    const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
+    const [contractRarity, setContractRarity] = useState<Rarity | null>(null);
+
+    const [outputSkins, setOutputSkins] = useState<Skin[]>([]);
+    const [EV, setEV] = useState<number | null>(null);
+    const [inputCost, setInputCost] = useState<number | null>(null);
+    const [expectedReturn, setExpectedReturn] = useState<number | null>(null);
+    const [ROI, setROI] = useState<number | null>(null);
+    const [chanceForProfit, setChanceForProfit] = useState<number | null>(null);
+    const [expectedProfit, setExpectedProfit] = useState<number | null>(null);
+
+    function openPicker(index: number) {
+        setSelectedSlot(index);
+        setSelectingSkin(true);
+    }
+
+    function handleSkinSelect(skin: Skin) {
+        if (selectedSlot === null) return;
+        setSelectedSkins((prev) => {
+            const next = [...prev];
+            next[selectedSlot] = skin;
+            return next;
+        });
+        setContractRarity(skin.rarity);
+        setSelectingSkin(false);
+        setSelectedSlot(null);
+    }
+
+    const isFull = useMemo(
+        () => selectedSkins.every((s) => s !== null),
+        [selectedSkins],
+    );
 
     useEffect(() => {
-        setIsLoadingMore(true);
-        setSkins([]);
-        setCurrentPage(1);
-        console.log('Filters changed:', collectionFilter, rarityFilter);
-        console.warn('PYTAM API');
-        axios
-            .get(
-                `/api/skins?page=1&collection=${collectionFilter}&rarity=${rarityFilter}`,
-            )
-            .then((response) => {
-                console.log('API Response:', response.data);
-                setSkins(response.data.data);
-                setLastPage(response.data.last_page || 1);
-                setCurrentPage(response.data.current_page);
+        if (!isFull) return;
+        const avgFloat = 0.2;
+        const rarityId = contractRarity ? contractRarity.id : 1;
+        // kolekcje musza byc UNIKALNE
+        const collectionIds = Array.from(
+            new Set(selectedSkins.map((s) => s!.collection_id)),
+        );
 
-                console.log('Current Page:', response.data.current_page);
-                console.log('Last Page:', response.data.last_page);
+        axios
+            .get('/api/tradeup', {
+                params: {
+                    avgInputFloat: avgFloat,
+                    rarity: rarityId,
+                    collections: collectionIds,
+                    statTrak: 0,
+                },
+            })
+            .then((response) => {
+                console.log('Tradeup results:', response.data);
+                setOutputSkins(response.data);
+                var ev =
+                    response.data.reduce(
+                        (sum: number, skin: Skin) => sum + (skin.price || 0),
+                        0,
+                    ) / response.data.length;
+                setEV(ev);
+                var inputCost = selectedSkins.reduce(
+                    (sum, skin) => sum + (skin?.price || 0),
+                    0,
+                );
+                setInputCost(inputCost);
+                setExpectedReturn(ev);
+                setROI(
+                    inputCost > 0 ? ((ev - inputCost) / inputCost) * 100 : null,
+                );
+                setChanceForProfit(
+                    (response.data.filter(
+                        (skin: Skin) => (skin.price || 0) > inputCost,
+                    ).length /
+                        response.data.length) *
+                        100,
+                );
+                setExpectedProfit(
+                    (response.data.filter(
+                        (skin: Skin) => (skin.price || 0) > inputCost,
+                    ).length /
+                        response.data.length) *
+                        100,
+                );
             })
             .catch((error) => {
-                console.error('Failed to load skins:', error);
-            })
-            .finally(() => {
-                setIsLoadingMore(false);
+                console.error('Error fetching tradeup results:', error);
             });
-    }, [collectionFilter, rarityFilter]);
-
-    useEffect(() => {
-        if (currentPage >= lastPage) {
-            return;
-        }
-        // 1. Tworzymy obserwatora i definiujemy co ma zrobić
-
-        const observer = new IntersectionObserver((entries) => {
-            const target = entries[0];
-            if (
-                target.isIntersecting &&
-                currentPage < lastPage &&
-                !isLoadingMore
-            ) {
-                setIsLoadingMore(true);
-                console.warn('PYTAM API');
-                axios
-                    .get(
-                        `/api/skins?page=${currentPage + 1}&collection=${collectionFilter}&rarity=${rarityFilter}`,
-                    )
-                    .then((response) => {
-                        const newSkins = response.data.data; // Pobieramy nowe skiny
-                        setSkins((prevSkins) => [...prevSkins, ...newSkins]); // Dodajemy je do istniejących
-                        setCurrentPage(response.data.current_page); // Zwiększamy numer strony
-                        setLastPage(response.data.last_page);
-
-                        console.log(
-                            'Current Page:',
-                            response.data.current_page,
-                        );
-                        console.log('Last Page:', response.data.last_page);
-                        //     console.log(
-                        //         'Current Page:',
-                        //         response.data.current_page,
-                        //     );
-                        //    console.log('Last Page:', response.data.last_page);
-                    })
-                    .catch((error) => {
-                        console.error('Failed to load more skins:', error);
-                    })
-                    .finally(() => {
-                        setIsLoadingMore(false);
-                    });
-            }
-        });
-
-        const loadMoreElement = loadMoreRef.current;
-
-        if (loadMoreElement) {
-            observer.observe(loadMoreElement);
-        }
-        return () => {
-            if (loadMoreElement) {
-                observer.unobserve(loadMoreElement);
-            }
-        };
-    }, [currentPage, lastPage, collectionFilter, rarityFilter, isLoadingMore]);
+    }, [isFull]);
 
     return (
         <>
             <Head title="Dashboard" />
-            <div className="pageContent min-h-[80vh] bg-[#0B0E14] p-6 text-white">
-                <div
-                    id="header"
-                    className="mb-6 flex items-center justify-between"
-                >
-                    <select
-                        className="rounded bg-[#1a1f29] p-2"
-                        value={collectionFilter}
-                        onChange={(e) => setCollectionFilter(e.target.value)}
-                    >
-                        <option value="">Wszystkie kolekcje</option>
-
-                        {collections.map((collection) => (
-                            <option key={collection.id} value={collection.id}>
-                                {collection.name}
-                            </option>
-                        ))}
-                    </select>
-
-                    <select
-                        className="rounded bg-[#1a1f29] p-2"
-                        value={rarityFilter}
-                        onChange={(e) => setRarityFilter(e.target.value)}
-                    >
-                        <option value="">Wszystkie rzadkości</option>
-
-                        {rarities.map((rarity) => (
-                            <option key={rarity.id} value={rarity.id}>
-                                {rarity.name}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-                    {skins.map((skin) => (
-                        <div
-                            key={skin.id}
-                            className="rounded-lg border border-gray-800 bg-[#1a1f29] p-4"
-                        >
-                            <img
-                                src={skin.image_url}
-                                alt={skin.name}
-                                className="mb-2 h-auto w-full"
-                            />
-
-                            <h3 className="font-bold">{skin.name}</h3>
-
-                            <p style={{ color: skin.rarity.color_hex }}>
-                                {skin.rarity.name}
-                            </p>
-
-                            <div className="mt-2 text-xs text-gray-400">
-                                Float: {skin.min_float} - {skin.max_float}
-                            </div>
-                        </div>
-                    ))}
-
-                    {skins.length === 0 && !isLoadingMore && (
-                        <div className="col-span-full py-8 text-center text-gray-400">
-                            No skins found for the selected filters.
-                        </div>
-                    )}
-
-                    {currentPage < lastPage && (
-                        <div ref={loadMoreRef}>
-                            <p>Ładowanie...</p>
-                        </div>
-                    )}
+            {/*Page Content*/}
+            <div className="min-h-[80vh] bg-[#0B0E14] p-6 text-white">
+                {/*Header*/}
+                <StatsBar
+                    EV={EV}
+                    inputCost={inputCost}
+                    expectedReturn={expectedReturn}
+                    ROI={ROI}
+                    chanceForProfit={chanceForProfit}
+                    expectedProfit={expectedProfit}
+                />
+                {/*TradeUp area*/}
+                <div className="flex gap-6">
+                    {/*Left div with input skins*/}
+                    <InputArea
+                        skins={selectedSkins}
+                        onSlotClick={(i) => openPicker(i)}
+                    />
+                    {/*Right div with output skins*/}
+                    <OutputArea outputSkins={outputSkins} />
                 </div>
             </div>
+
+            <SelectSkin
+                apiData={apiData}
+                collections={collections}
+                rarities={rarities}
+                contractRarity={contractRarity}
+                onSelect={handleSkinSelect}
+                onClose={() => setSelectingSkin(false)}
+                visible={selectingSkin && selectedSlot !== null}
+            />
         </>
     );
 }

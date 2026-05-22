@@ -10,4 +10,5 @@ Route::get('/user', function (Request $request) {
 
 
 Route::get('/skins', [DataController::class, 'getSkins'])->name('api.getSkins');
+Route::get('/tradeup', [DataController::class, 'calculateTradeUp'])->name('api.calculateTradeUp');
 
