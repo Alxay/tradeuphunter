@@ -52,7 +52,7 @@ export default function OutputArea({ outputSkins = [] }: OutputAreaProps) {
                             <p className="text-sm text-gray-400">
                                 Condition: {skin.condition ?? 'N/A'}
                             </p>
-                            {skin.statTrak && (
+                            {skin.statTrak == true && (
                                 <p className="text-sm font-bold text-yellow-400">
                                     StatTrak
                                 </p>

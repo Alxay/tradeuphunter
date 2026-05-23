@@ -191,7 +191,7 @@ export default function Index({ apiData, collections, rarities }: Props) {
                     avgInputFloat: avgFloat,
                     rarity: rarityId,
                     collections: collectionIds,
-                    statTrak: 0,
+                    statTrak: contractStatTrak,
                 },
             })
             .then((response) => {
