@@ -19,13 +19,19 @@ class DataManager extends Model
             })
             ->orderBy('rarity_id', 'asc')
             ->paginate($perPage, ['*'], 'page', $page);
-
+        //pobieramy cene dla kazdej z kondycji
         $result->getCollection()->transform(function ($skin) use ($condition, $statTrak) {
-            $price = $skin->prices()
-                ->where('condition', $condition)
+            $prices = $skin->prices()
                 ->where('is_stattrak', $statTrak)
-                ->first();
-            $skin->price = $price ? $price->price_30d : null;
+                ->get()
+                ->keyBy('condition');
+            //jezeli cena 30d jest nul bierzemy z 90d
+            $skin->priceBS = $prices->get("Battle-Scarred") ?->price_30d ?? $prices->get("Battle-Scarred") ?->price_90d;
+            $skin->priceWW = $prices->get("Well-Worn") ?->price_30d ?? $prices->get("Well-Worn") ?->price_90d;
+            $skin->priceFT = $prices->get("Field-Tested") ?->price_30d ?? $prices->get("Field-Tested") ?->price_90d;
+            $skin->priceMW = $prices->get("Minimal Wear") ?->price_30d ?? $prices->get("Minimal Wear") ?->price_90d;
+            $skin->priceFN = $prices->get("Factory New") ?->price_30d ?? $prices->get("Factory New") ?->price_90d;
+            //$skin->price = $price ? $price->price_30d : null;
             $skin->statTrak = $statTrak;
             return $skin;
         });
@@ -40,27 +46,6 @@ class DataManager extends Model
         $rarities = Rarity::all();
         return $rarities;
     }
-private function getConditionFromFloat(float $outputFloat, float $minFloat, float $maxFloat) {
-    // 1. Obliczamy finalny float broni z kontraktu ze wzoru
-    
-    // 2. Ustalamy stan (Condition) na podstawie z góry określonych widełek gry
-    $condition = 'Unknown';
-    
-    if ($outputFloat >= 0.00 && $outputFloat < 0.07) {
-        $condition = 'Factory New';
-    } elseif ($outputFloat >= 0.07 && $outputFloat < 0.15) {
-        $condition = 'Minimal Wear';
-    } elseif ($outputFloat >= 0.15 && $outputFloat < 0.38) {
-        $condition = 'Field-Tested';
-    } elseif ($outputFloat >= 0.38 && $outputFloat < 0.45) {
-        $condition = 'Well-Worn';
-    } elseif ($outputFloat >= 0.45 && $outputFloat <= 1.00) {
-        $condition = 'Battle-Scarred';
-    }
-
-    // 3. Zwracamy wynik
-    return $condition;
-}
     public function calculateTradeUp($avgInputFloat, $rarity, $collections, $statTrak = false)
     {
         $outputRarityId = $rarity -1;
@@ -69,22 +54,24 @@ private function getConditionFromFloat(float $outputFloat, float $minFloat, floa
             ->whereIn('collection_id', $collections)
             ->get();
 
-        $outputSkins = $outputSkins->map(function ($skin) use ($avgInputFloat, $statTrak) {
-            $maxFloat = $skin->max_float;
-            $minFloat = $skin->min_float;
-            $outputFloat = ($maxFloat - $minFloat) * $avgInputFloat + $minFloat;
-            $skin->condition = $this->getConditionFromFloat($outputFloat, $minFloat, $maxFloat);
-            $price = $skin->prices()
-                ->where('condition', $skin->condition)
+        $outputSkins = $outputSkins->map(function ($skin) use ($statTrak) {
+            $prices = $skin->prices()
                 ->where('is_stattrak', $statTrak)
-                ->first();
-            $skin->price = $price ? $price->price_30d : null;
+                ->get()
+                ->keyBy('condition');
+            
+            $skin->priceBS = $prices->get("Battle-Scarred") ?->price_30d ?? $prices->get("Battle-Scarred") ?->price_90d;
+            $skin->priceWW = $prices->get("Well-Worn") ?->price_30d ?? $prices->get("Well-Worn") ?->price_90d;
+            $skin->priceFT = $prices->get("Field-Tested") ?->price_30d ?? $prices->get("Field-Tested") ?->price_90d;
+            $skin->priceMW = $prices->get("Minimal Wear") ?->price_30d ?? $prices->get("Minimal Wear") ?->price_90d;
+            $skin->priceFN = $prices->get("Factory New") ?->price_30d ?? $prices->get("Factory New") ?->price_90d;
             $skin->statTrak = $statTrak;
-            $skin->float = $outputFloat;
             return $skin;
         });
 
         return $outputSkins;
         
     }
+
+    
 }

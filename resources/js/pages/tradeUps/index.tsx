@@ -6,40 +6,7 @@ import InputArea from './inputArea';
 import OutputArea from './outputArea';
 import StatsBar from './statsBar';
 import SelectSkin from './selectSkin';
-
-interface Rarity {
-    id: number;
-    name: string;
-    color_hex: string;
-}
-
-interface Skin {
-    id: number;
-    name: string;
-    image_url: string;
-    min_float: number;
-    max_float: number;
-    rarity: Rarity;
-    collection_id: number;
-    price: number;
-    condition?: string | null;
-    statTrak: boolean;
-    float?: number | null;
-}
-
-interface ApiData {
-    current_page: number;
-    data: Skin[];
-    total?: number;
-    last_page?: number;
-}
-
-interface Collection {
-    id: number;
-    name: string;
-    api_id: number;
-    image_url: string;
-}
+import { Rarity, Skin, ApiData, Collection } from '../../types/skin';
 
 interface Props {
     apiData: ApiData;
@@ -82,10 +49,42 @@ export default function Index({ apiData, collections, rarities }: Props) {
         [selectedSkins],
     );
 
+    function conditionToPrice(skin: Skin): number {
+        switch (skin.condition ?? 'Field-Tested') {
+            case 'Battle-Scarred':
+                return skin.priceBS ?? 0;
+            case 'Well-Worn':
+                return skin.priceWW ?? 0;
+            case 'Field-Tested':
+                return skin.priceFT ?? 0;
+            case 'Minimal Wear':
+                return skin.priceMW ?? 0;
+            case 'Factory New':
+                return skin.priceFN ?? 0;
+            default:
+                return 0;
+        }
+    }
+
+    function getConditionFromFloat(skin: Skin): string {
+        if (skin.float == null) return 'N/A';
+        const float = skin.float;
+        if (float >= 0 && float < 0.07) return 'Factory New';
+        if (float >= 0.07 && float < 0.15) return 'Minimal Wear';
+        if (float >= 0.15 && float < 0.38) return 'Field-Tested';
+        if (float >= 0.38 && float < 0.45) return 'Well-Worn';
+        if (float >= 0.45 && float <= 1.0) return 'Battle-Scarred';
+        return 'N/A';
+    }
+
+    function getSkinNormalizedFloat(skin: Skin, float: number): number {
+        return float * (skin.max_float - skin.min_float) + skin.min_float;
+    }
+
     // 3. Jedyne źródło prawdy dla statystyk (Brak useState dla pojedynczych liczb!)
     const stats = useMemo(() => {
         const inputCost = selectedSkins.reduce(
-            (sum, skin) => sum + (skin?.price || 0),
+            (sum, skin) => sum + (skin ? conditionToPrice(skin) : 0),
             0,
         );
 
@@ -101,13 +100,15 @@ export default function Index({ apiData, collections, rarities }: Props) {
         }
 
         const ev =
-            outputSkins.reduce((sum, skin) => sum + (skin.price || 0), 0) /
-            outputSkins.length;
+            outputSkins.reduce(
+                (sum, skin) => sum + (skin ? conditionToPrice(skin) : 0),
+                0,
+            ) / outputSkins.length;
 
         const roi = inputCost > 0 ? ((ev - inputCost) / inputCost) * 100 : 0;
 
         const profitSkinsCount = outputSkins.filter(
-            (skin) => (skin.price || 0) > inputCost,
+            (skin) => (skin ? conditionToPrice(skin) : 0) > inputCost,
         ).length;
 
         const chanceForProfit = (profitSkinsCount / outputSkins.length) * 100;
@@ -154,17 +155,15 @@ export default function Index({ apiData, collections, rarities }: Props) {
             if (next[position]) {
                 next[position] = { ...next[position], float: value };
             }
+            // If contract is full after this change, compute average based on the updated array
+            if (next.every((s) => s !== null)) {
+                const avgFloat =
+                    next.reduce((sum, skin) => sum + (skin?.float || 0), 0) /
+                    next.length;
+                setAvgNormalizedFloat(avgFloat);
+            }
             return next;
         });
-
-        if (isFull) {
-            const avgFloat =
-                selectedSkins.reduce(
-                    (sum, skin) => sum + (skin?.float || 0),
-                    0,
-                ) / selectedSkins.length;
-            setAvgNormalizedFloat(avgFloat);
-        }
     }
 
     // 4. Pobieranie danych z API z poprawnymi zależnościami
@@ -196,6 +195,13 @@ export default function Index({ apiData, collections, rarities }: Props) {
             })
             .then((response) => {
                 console.log('Otrzymane dane z API:', response.data);
+                // Use the locally computed avgFloat (absolute float) instead of
+                // the state `avgNormalizedFloat` which may be stale.
+                response.data.map((skin: Skin) => {
+                    // avgFloat is an absolute float value (0..1 range), so assign directly
+                    skin.float = avgFloat;
+                    skin.condition = getConditionFromFloat(skin);
+                });
                 setOutputSkins(response.data);
             })
             .catch((error) => {
@@ -240,8 +246,13 @@ export default function Index({ apiData, collections, rarities }: Props) {
                         duplicateSkin={duplicateSkin}
                         delSkin={delSkin}
                         updateFloat={updateFloat}
+                        conditionToPrice={conditionToPrice}
                     />
-                    <OutputArea outputSkins={outputSkins} />
+                    <OutputArea
+                        outputSkins={outputSkins}
+                        getConditionFromFloat={getConditionFromFloat}
+                        conditionToPrice={conditionToPrice}
+                    />
                 </div>
             </div>
 

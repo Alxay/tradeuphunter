@@ -1,35 +1,9 @@
 import axios from 'axios';
 import { dashboard } from '@/routes';
 import { useEffect, useRef, useState } from 'react';
-
-interface Rarity {
-    id: number;
-    name: string;
-    color_hex: string;
-}
-
-interface Skin {
-    id: number;
-    name: string;
-    image_url: string;
-    min_float: number;
-    max_float: number;
-    rarity: Rarity; // Zagnieżdżony obiekt rarity
-    collection_id: number;
-    price: number;
-    condition?: string | null;
-    statTrak: boolean;
-    float?: number | null;
-}
+import { Skin, Rarity, ApiData, Collection } from '../../types/skin';
 
 // Skoro Laravel zwraca paginację, struktura wygląda tak:
-
-interface ApiData {
-    current_page: number;
-    data: Skin[]; // Tu są Twoje skiny
-    total?: number;
-    last_page?: number;
-}
 
 interface Props {
     apiData: ApiData;
@@ -40,13 +14,6 @@ interface Props {
     onSelect: (skin: Skin) => void;
     onClose: () => void;
     visible: boolean;
-}
-
-interface Collection {
-    id: number;
-    name: string;
-    api_id: number;
-    image_url: string;
 }
 
 SelectSkin.layout = {
@@ -95,6 +62,23 @@ export default function SelectSkin({
         'Battle-Scarred': 0.7,
     };
 
+    function getPriceByCondition(skin: Skin, condition: string): number {
+        switch (condition) {
+            case 'Battle-Scarred':
+                return skin.priceBS ?? 0;
+            case 'Well-Worn':
+                return skin.priceWW ?? 0;
+            case 'Field-Tested':
+                return skin.priceFT ?? 0;
+            case 'Minimal Wear':
+                return skin.priceMW ?? 0;
+            case 'Factory New':
+                return skin.priceFN ?? 0;
+            default:
+                return 0;
+        }
+    }
+
     useEffect(() => {
         setIsLoadingMore(true);
         setSkins([]);
@@ -129,7 +113,7 @@ export default function SelectSkin({
             .finally(() => {
                 setIsLoadingMore(false);
             });
-    }, [collectionFilter, rarityFilter, conditionFilter, statTrakFilter]);
+    }, [collectionFilter, rarityFilter, statTrakFilter]);
 
     useEffect(() => {
         if (currentPage >= lastPage) {
@@ -293,11 +277,14 @@ export default function SelectSkin({
                     {skins.map((skin) => (
                         <div
                             onClick={() => {
-                                skin.condition = conditionFilter;
-                                skin.float =
-                                    deafultFloatsByCondition[conditionFilter] ||
-                                    0.25;
-                                onSelect(skin);
+                                onSelect({
+                                    ...skin,
+                                    condition: conditionFilter,
+                                    float:
+                                        deafultFloatsByCondition[
+                                            conditionFilter
+                                        ] || 0.25,
+                                });
                                 onClose();
                             }}
                             key={skin.id}
@@ -315,7 +302,8 @@ export default function SelectSkin({
                                 {skin.rarity.name}
                             </p>
                             <p className="mt-1 font-semibold">
-                                Cena: {skin.price}$
+                                Cena:{' '}
+                                {getPriceByCondition(skin, conditionFilter)}$
                             </p>
                             {skin.statTrak != false && (
                                 <p className="font-bold text-yellow-400">

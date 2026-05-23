@@ -1,22 +1,6 @@
 import { Copy, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-interface Rarity {
-    id: number;
-    name: string;
-    color_hex: string;
-}
-interface Skin {
-    id: number;
-    name: string;
-    image_url: string;
-    min_float: number;
-    max_float: number;
-    rarity: Rarity; // Zagnieżdżony obiekt rarity
-    price?: number | null;
-    condition?: string | null;
-    statTrak: boolean;
-    float?: number | null;
-}
+import { Skin } from '../../types/skin';
 
 export default function SkinSlot({
     position,
@@ -25,6 +9,7 @@ export default function SkinSlot({
     duplicateSkin,
     delSkin,
     updateFloat,
+    conditionToPrice,
 }: {
     position: number;
     skin: Skin | null;
@@ -32,35 +17,8 @@ export default function SkinSlot({
     duplicateSkin: (skin: Skin) => void;
     delSkin: (index: number) => void;
     updateFloat: (position: number, value: number) => void;
+    conditionToPrice: (skin: Skin) => number;
 }) {
-    function conditionToFloatRanges(condition: string): {
-        min: number;
-        max: number;
-    } {
-        switch (condition) {
-            case 'Factory New':
-                return { min: 0.0, max: 0.07 };
-            case 'Minimal Wear':
-                return { min: 0.07, max: 0.15 };
-            case 'Field-Tested':
-                return { min: 0.15, max: 0.38 };
-            case 'Well-Worn':
-                return { min: 0.38, max: 0.45 };
-            case 'Battle-Scarred':
-                return { min: 0.45, max: 1.0 };
-            default:
-                return { min: 0.0, max: 1.0 };
-        }
-    }
-
-    const floatRange = useMemo(() => {
-        if (!skin) {
-            return null;
-        }
-
-        return conditionToFloatRanges(skin.condition || '');
-    }, [skin]);
-
     const [invalidFloat, setInvalidFloat] = useState(false);
     const [localFloat, setLocalFloat] = useState<string>(
         skin?.float !== undefined && skin?.float !== null
@@ -76,6 +34,15 @@ export default function SkinSlot({
         );
         setInvalidFloat(false);
     }, [skin?.id]);
+
+    function getConditionFromFloat(float: number): string {
+        if (float >= 0.45) return 'Battle-Scarred';
+        if (float >= 0.38) return 'Well-Worn';
+        if (float >= 0.15) return 'Field-Tested';
+        if (float >= 0.07) return 'Minimal Wear';
+        if (float >= 0) return 'Factory New';
+        return 'N/A';
+    }
 
     return (
         <button
@@ -113,8 +80,8 @@ export default function SkinSlot({
                         type="number"
                         placeholder="Float"
                         value={localFloat}
-                        min={floatRange?.min}
-                        max={floatRange?.max}
+                        min={skin?.min_float}
+                        max={skin?.max_float}
                         className="mb-2 w-16 rounded border border-gray-500 bg-gray-700 px-1 text-sm text-gray-300"
                         step={0.02}
                         onClick={(e) => e.stopPropagation()} // Zapobiega wywołaniu onClick rodzica
@@ -123,12 +90,13 @@ export default function SkinSlot({
                             setLocalFloat(nextValue);
                             const value = parseFloat(nextValue);
                             updateFloat(position, value);
+                            skin.condition = getConditionFromFloat(value);
 
                             if (
                                 nextValue === '' ||
                                 Number.isNaN(value) ||
-                                value < (floatRange?.min || 0) ||
-                                value > (floatRange?.max || 1)
+                                value < (skin?.min_float || 0) ||
+                                value > (skin?.max_float || 1)
                             ) {
                                 setInvalidFloat(true);
                             } else {
@@ -138,16 +106,16 @@ export default function SkinSlot({
                     />
                     {invalidFloat && (
                         <p className="text-xs text-red-500">
-                            Float must be between {floatRange?.min} and{' '}
-                            {floatRange?.max}
+                            Float must be between {skin?.min_float} and{' '}
+                            {skin?.max_float}
                         </p>
                     )}
                     <p className="text-sm text-gray-500">{skin.condition}</p>
                     <p className="text-sm font-semibold text-gray-300">
                         {skin.name}
                     </p>
-                    <p className="text-xs text-gray-500">
-                        {skin.price ? skin.price + ' $' : 'N/A'}
+                    <p className="text-sm text-red-600">
+                        {conditionToPrice(skin)} $
                     </p>
                     {skin.statTrak != false && (
                         <p className="font-bold text-yellow-400">StatTrak</p>

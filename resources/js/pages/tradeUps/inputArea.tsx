@@ -1,21 +1,6 @@
 import SkinSlot from './skinSlot';
 import { RotateCcw } from 'lucide-react';
-
-interface Rarity {
-    id: number;
-    name: string;
-    color_hex: string;
-}
-interface Skin {
-    id: number;
-    name: string;
-    image_url: string;
-    min_float: number;
-    max_float: number;
-    rarity: Rarity; // Zagnieżdżony obiekt rarity
-    // optional properties to match other Skin definitions across the project
-    statTrak: boolean;
-}
+import { Skin } from '../../types/skin';
 
 interface Props {
     skins: (Skin | null)[];
@@ -24,6 +9,7 @@ interface Props {
     delSkin: (index: number) => void;
     updateFloat: (position: number, value: number) => void;
     reset: () => void;
+    conditionToPrice: (skin: Skin) => number;
 }
 
 export default function InputArea({
@@ -33,6 +19,7 @@ export default function InputArea({
     delSkin,
     reset,
     updateFloat,
+    conditionToPrice,
 }: Props) {
     return (
         <div className="flex-1">
@@ -50,6 +37,7 @@ export default function InputArea({
                         delSkin={delSkin}
                         onClick={() => onSlotClick(index)}
                         updateFloat={updateFloat}
+                        conditionToPrice={conditionToPrice}
                     />
                 ))}
             </div>

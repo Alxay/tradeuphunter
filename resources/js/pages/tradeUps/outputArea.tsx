@@ -1,26 +1,16 @@
-interface Rarity {
-    id: number;
-    name: string;
-    color_hex: string;
-}
-interface Skin {
-    id: number;
-    name: string;
-    image_url: string;
-    min_float: number;
-    max_float: number;
-    rarity?: Rarity; // Zagnieżdżony obiekt rarity
-    collection_id: number;
-    price?: number | null;
-    float?: number | null;
-    condition?: string | null;
-    statTrak: boolean;
-}
+import { Skin } from '../../types/skin';
+
 interface OutputAreaProps {
     outputSkins?: Skin[];
+    getConditionFromFloat?: (skin: Skin) => string;
+    conditionToPrice?: (skin: Skin) => number;
 }
 
-export default function OutputArea({ outputSkins = [] }: OutputAreaProps) {
+export default function OutputArea({
+    outputSkins = [],
+    getConditionFromFloat,
+    conditionToPrice,
+}: OutputAreaProps) {
     return (
         <div className="min-h-400px w-1/3 rounded-lg border border-gray-700 bg-gray-900 p-4">
             <h2 className="mb-4 text-xl font-semibold">Output Skins</h2>
@@ -41,7 +31,10 @@ export default function OutputArea({ outputSkins = [] }: OutputAreaProps) {
                                 Rarity: {skin.rarity?.name ?? 'Unknown'}
                             </p>
                             <p className="text-sm text-gray-400">
-                                Price: {skin.price ?? 'N/A'}
+                                Price:{' '}
+                                {conditionToPrice
+                                    ? conditionToPrice(skin)
+                                    : 'N/A'}
                             </p>
                             <p className="text-sm text-gray-400">
                                 Float:{' '}
@@ -50,7 +43,10 @@ export default function OutputArea({ outputSkins = [] }: OutputAreaProps) {
                                     : 'N/A'}
                             </p>
                             <p className="text-sm text-gray-400">
-                                Condition: {skin.condition ?? 'N/A'}
+                                Condition:{' '}
+                                {getConditionFromFloat
+                                    ? getConditionFromFloat(skin)
+                                    : 'N/A'}
                             </p>
                             {skin.statTrak == true && (
                                 <p className="text-sm font-bold text-yellow-400">
