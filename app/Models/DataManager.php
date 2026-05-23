@@ -40,9 +40,8 @@ class DataManager extends Model
         $rarities = Rarity::all();
         return $rarities;
     }
-private function getConditionFromFloat(float $averageInputFloat, float $minFloat, float $maxFloat) {
+private function getConditionFromFloat(float $outputFloat, float $minFloat, float $maxFloat) {
     // 1. Obliczamy finalny float broni z kontraktu ze wzoru
-    $outputFloat = ($maxFloat - $minFloat) * $averageInputFloat + $minFloat;
     
     // 2. Ustalamy stan (Condition) na podstawie z góry określonych widełek gry
     $condition = 'Unknown';
@@ -71,12 +70,17 @@ private function getConditionFromFloat(float $averageInputFloat, float $minFloat
             ->get();
 
         $outputSkins = $outputSkins->map(function ($skin) use ($avgInputFloat, $statTrak) {
+            $maxFloat = $skin->max_float;
+            $minFloat = $skin->min_float;
+            $outputFloat = ($maxFloat - $minFloat) * $avgInputFloat + $minFloat;
+            $skin->condition = $this->getConditionFromFloat($outputFloat, $minFloat, $maxFloat);
             $price = $skin->prices()
-                ->where('condition', $this->getConditionFromFloat($avgInputFloat, $skin['min_float'], $skin['max_float']))
+                ->where('condition', $skin->condition)
                 ->where('is_stattrak', $statTrak)
                 ->first();
             $skin->price = $price ? $price->price_30d : null;
             $skin->statTrak = $statTrak;
+            $skin->float = $outputFloat;
             return $skin;
         });
 

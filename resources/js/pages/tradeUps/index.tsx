@@ -195,6 +195,7 @@ export default function Index({ apiData, collections, rarities }: Props) {
                 },
             })
             .then((response) => {
+                console.log('Otrzymane dane z API:', response.data);
                 setOutputSkins(response.data);
             })
             .catch((error) => {

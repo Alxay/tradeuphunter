@@ -12,6 +12,9 @@ interface Skin {
     rarity?: Rarity; // Zagnieżdżony obiekt rarity
     collection_id: number;
     price?: number | null;
+    float?: number | null;
+    condition?: string | null;
+    statTrak: boolean;
 }
 interface OutputAreaProps {
     outputSkins?: Skin[];
@@ -40,6 +43,20 @@ export default function OutputArea({ outputSkins = [] }: OutputAreaProps) {
                             <p className="text-sm text-gray-400">
                                 Price: {skin.price ?? 'N/A'}
                             </p>
+                            <p className="text-sm text-gray-400">
+                                Float:{' '}
+                                {skin.float != null
+                                    ? skin.float.toFixed(10)
+                                    : 'N/A'}
+                            </p>
+                            <p className="text-sm text-gray-400">
+                                Condition: {skin.condition ?? 'N/A'}
+                            </p>
+                            {skin.statTrak && (
+                                <p className="text-sm font-bold text-yellow-400">
+                                    StatTrak
+                                </p>
+                            )}
                         </div>
                     </div>
                 ))}
