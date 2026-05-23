@@ -5,6 +5,7 @@ interface StatsBarProps {
     ROI: number | null;
     chanceForProfit: number | null;
     expectedProfit: number | null;
+    avgNormalizedFloat: number;
 }
 
 export default function StatsBar({
@@ -14,6 +15,7 @@ export default function StatsBar({
     ROI,
     chanceForProfit,
     expectedProfit,
+    avgNormalizedFloat,
 }: StatsBarProps) {
     return (
         <div className="mb-6 flex justify-between rounded-md bg-gray-800 p-4">
@@ -41,6 +43,12 @@ export default function StatsBar({
                     Oczekiwany zysk:{' '}
                     {expectedProfit !== null
                         ? expectedProfit.toFixed(2) + ' $'
+                        : 'N/A'}
+                </p>
+                <p>
+                    Średni znormalizowany float:{' '}
+                    {avgNormalizedFloat !== null
+                        ? avgNormalizedFloat.toFixed(10)
                         : 'N/A'}
                 </p>
             </div>

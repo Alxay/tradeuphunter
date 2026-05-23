@@ -22,6 +22,7 @@ interface Props {
     onSlotClick: (index: number) => void;
     duplicateSkin: (skin: Skin) => void;
     delSkin: (index: number) => void;
+    updateFloat: (position: number, value: number) => void;
     reset: () => void;
 }
 
@@ -31,6 +32,7 @@ export default function InputArea({
     duplicateSkin,
     delSkin,
     reset,
+    updateFloat,
 }: Props) {
     return (
         <div className="flex-1">
@@ -47,6 +49,7 @@ export default function InputArea({
                         duplicateSkin={duplicateSkin}
                         delSkin={delSkin}
                         onClick={() => onSlotClick(index)}
+                        updateFloat={updateFloat}
                     />
                 ))}
             </div>

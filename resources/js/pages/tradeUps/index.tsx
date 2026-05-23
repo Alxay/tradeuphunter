@@ -24,6 +24,7 @@ interface Skin {
     price: number;
     condition?: string | null;
     statTrak: boolean;
+    float?: number | null;
 }
 
 interface ApiData {
@@ -62,6 +63,7 @@ export default function Index({ apiData, collections, rarities }: Props) {
         Array(10).fill(null),
     );
     const [outputSkins, setOutputSkins] = useState<Skin[]>([]);
+    const [avgNormalizedFloat, setAvgNormalizedFloat] = useState(0);
 
     // 1. Dynamicznie sprawdzamy rzadkość na podstawie pierwszego wrzuconego skina
     const contractRarity = useMemo(() => {
@@ -146,6 +148,25 @@ export default function Index({ apiData, collections, rarities }: Props) {
         });
     }
 
+    function updateFloat(position: number, value: number) {
+        setSelectedSkins((prev) => {
+            const next = [...prev];
+            if (next[position]) {
+                next[position] = { ...next[position], float: value };
+            }
+            return next;
+        });
+
+        if (isFull) {
+            const avgFloat =
+                selectedSkins.reduce(
+                    (sum, skin) => sum + (skin?.float || 0),
+                    0,
+                ) / selectedSkins.length;
+            setAvgNormalizedFloat(avgFloat);
+        }
+    }
+
     // 4. Pobieranie danych z API z poprawnymi zależnościami
     useEffect(() => {
         if (!isFull) {
@@ -153,7 +174,11 @@ export default function Index({ apiData, collections, rarities }: Props) {
             return;
         }
 
-        const avgFloat = 0.2; // TODO: w przyszłości podepnij pod realny suwak/stan
+        const avgFloat =
+            selectedSkins.reduce((sum, skin) => sum + (skin?.float || 0), 0) /
+            selectedSkins.length;
+        setAvgNormalizedFloat(avgFloat);
+
         const rarityId = contractRarity ? contractRarity.id : 1;
 
         const collectionIds = Array.from(
@@ -203,6 +228,7 @@ export default function Index({ apiData, collections, rarities }: Props) {
                     ROI={stats.roi}
                     chanceForProfit={stats.chanceForProfit}
                     expectedProfit={stats.expectedProfit}
+                    avgNormalizedFloat={avgNormalizedFloat}
                 />
 
                 <div className="flex gap-6">
@@ -212,6 +238,7 @@ export default function Index({ apiData, collections, rarities }: Props) {
                         onSlotClick={(i) => openPicker(i)}
                         duplicateSkin={duplicateSkin}
                         delSkin={delSkin}
+                        updateFloat={updateFloat}
                     />
                     <OutputArea outputSkins={outputSkins} />
                 </div>

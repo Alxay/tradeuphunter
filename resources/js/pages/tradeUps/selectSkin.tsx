@@ -19,6 +19,7 @@ interface Skin {
     price: number;
     condition?: string | null;
     statTrak: boolean;
+    float?: number | null;
 }
 
 // Skoro Laravel zwraca paginację, struktura wygląda tak:
@@ -85,6 +86,14 @@ export default function SelectSkin({
     const [conditionFilter, setConditionFilter] =
         useState<string>('Field-Tested');
     // console.log(rarities);
+
+    const deafultFloatsByCondition: Record<string, number> = {
+        'Factory New': 0.03,
+        'Minimal Wear': 0.1,
+        'Field-Tested': 0.25,
+        'Well-Worn': 0.4,
+        'Battle-Scarred': 0.7,
+    };
 
     useEffect(() => {
         setIsLoadingMore(true);
@@ -285,6 +294,9 @@ export default function SelectSkin({
                         <div
                             onClick={() => {
                                 skin.condition = conditionFilter;
+                                skin.float =
+                                    deafultFloatsByCondition[conditionFilter] ||
+                                    0.25;
                                 onSelect(skin);
                                 onClose();
                             }}
