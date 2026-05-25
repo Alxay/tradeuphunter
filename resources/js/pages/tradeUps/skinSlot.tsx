@@ -1,4 +1,4 @@
-import { Copy, Trash2, Plus } from 'lucide-react';
+import { Copy, Trash2, Plus, Layers } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Skin } from '../../types/skin';
 
@@ -7,6 +7,7 @@ interface SkinSlotProps {
     skin: Skin | null;
     onClick: () => void;
     duplicateSkin: (skin: Skin) => void;
+    fillEmptySlots: (skin: Skin) => void;
     delSkin: (index: number) => void;
     updateFloat: (position: number, value: number) => void;
     conditionToPrice: (skin: Skin) => number;
@@ -34,6 +35,7 @@ export default function SkinSlot({
     skin,
     onClick,
     duplicateSkin,
+    fillEmptySlots,
     delSkin,
     updateFloat,
     conditionToPrice,
@@ -83,6 +85,16 @@ export default function SkinSlot({
             {/* Action buttons — visible on hover */}
             <div className="absolute right-1 top-1 z-20 flex gap-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
                 <button
+                    className="rounded-md bg-black/60 p-1.5 text-gray-400 backdrop-blur-sm transition-colors hover:bg-emerald-500/20 hover:text-emerald-400"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        fillEmptySlots(skin);
+                    }}
+                    title="Fill empty slots"
+                >
+                    <Layers className="h-3.5 w-3.5" />
+                </button>
+                <button
                     className="rounded-md bg-black/60 p-1.5 text-gray-400 backdrop-blur-sm transition-colors hover:bg-white/10 hover:text-white"
                     onClick={(e) => {
                         e.stopPropagation();
@@ -105,7 +117,12 @@ export default function SkinSlot({
             </div>
 
             {/* Weapon image */}
-            <div className="flex flex-1 items-center justify-center p-2">
+            <div className="flex flex-1 items-center justify-center p-2 relative">
+                {(skin.statTrak == true || String(skin.statTrak) === '1') && (
+                    <div className="absolute left-2 top-2 rounded bg-gradient-to-r from-amber-600 to-amber-500 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-md">
+                        StatTrak™
+                    </div>
+                )}
                 <img
                     src={skin.image_url}
                     alt={skin.name}
@@ -174,15 +191,6 @@ export default function SkinSlot({
                         ${price.toFixed(2)}
                     </span>
                 </div>
-
-                {skin.statTrak === true && (
-                    <div className="flex items-center gap-1">
-                        <div className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-                        <span className="text-[10px] font-bold text-amber-400">
-                            StatTrak™
-                        </span>
-                    </div>
-                )}
             </div>
         </div>
     );

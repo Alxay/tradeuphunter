@@ -70,20 +70,47 @@ export default function SelectSkin({
         apiData.current_page,
     );
     const [lastPage, setLastPage] = useState<number>(apiData.last_page || 1);
+
     const [collectionFilter, setCollectionFilter] = useState<string>('');
-    const [rarityFilter, setRarityFilter] = useState<string>('');
+    const [rarityFilter, setRarityFilter] = useState<string>(''); // Default is empty to show all rarities
     const [conditionFilter, setConditionFilter] =
         useState<string>('Field-Tested');
     const [statTrakFilter, setStatTrakFilter] = useState<string>('0');
+
     const [searchInput, setSearchInput] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
+    // Custom dropdown states
+    const [isCollectionOpen, setIsCollectionOpen] = useState(false);
+    const [isRarityOpen, setIsRarityOpen] = useState(false);
+
     const loadMoreRef = useRef<HTMLDivElement | null>(null);
     const isLoadingMoreRef = useRef(false);
-    const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
-        null,
-    );
+    const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const collectionRef = useRef<HTMLDivElement>(null);
+    const rarityRef = useRef<HTMLDivElement>(null);
+
+    // Close dropdowns on outside click
+    useEffect(() => {
+        function handleClickOutside(e: MouseEvent) {
+            if (
+                collectionRef.current &&
+                !collectionRef.current.contains(e.target as Node)
+            ) {
+                setIsCollectionOpen(false);
+            }
+            if (
+                rarityRef.current &&
+                !rarityRef.current.contains(e.target as Node)
+            ) {
+                setIsRarityOpen(false);
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () =>
+            document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     // Build API params (condition excluded — backend does not use it)
     const getApiParams = useCallback(
@@ -131,16 +158,11 @@ export default function SelectSkin({
                         params: getApiParams(currentPage + 1),
                     })
                     .then((res) => {
-                        setSkins((prev) => [
-                            ...prev,
-                            ...(res.data.data || []),
-                        ]);
+                        setSkins((prev) => [...prev, ...(res.data.data || [])]);
                         setCurrentPage(res.data.current_page);
                         setLastPage(res.data.last_page);
                     })
-                    .catch((err) =>
-                        console.error('Failed to load more:', err),
-                    )
+                    .catch((err) => console.error('Failed to load more:', err))
                     .finally(() => {
                         isLoadingMoreRef.current = false;
                     });
@@ -160,7 +182,7 @@ export default function SelectSkin({
         if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
         searchTimeoutRef.current = setTimeout(
             () => setSearchQuery(value),
-            350,
+            600, // Updated to 700ms delay
         );
     };
 
@@ -205,54 +227,204 @@ export default function SelectSkin({
                 <div className="space-y-3 border-b border-white/5 px-6 py-4">
                     {/* Search */}
                     <div className="relative">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+                        <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-500" />
                         <input
                             type="text"
                             placeholder="Search skins…"
                             value={searchInput}
-                            className="w-full rounded-xl border border-white/10 bg-white/5 py-2.5 pl-10 pr-4 text-sm text-white placeholder-gray-500 outline-none transition-colors focus:border-cyan-500/50 focus:bg-cyan-500/[0.03]"
+                            className="w-full rounded-xl border border-white/10 bg-[#161b22] py-2.5 pr-4 pl-10 text-sm text-white placeholder-gray-500 transition-colors outline-none focus:border-cyan-500/50 focus:bg-[#1c2128]"
                             onChange={(e) => handleSearchInput(e.target.value)}
                         />
                     </div>
 
                     {/* Filters row */}
                     <div className="flex flex-wrap items-center gap-3">
-                        {/* Collection */}
-                        <select
-                            className="rounded-lg border border-white/10 bg-[#161b22] px-3 py-2 text-sm text-gray-300 outline-none transition-colors focus:border-cyan-500/50"
-                            style={{ colorScheme: 'dark' }}
-                            value={collectionFilter}
-                            onChange={(e) =>
-                                setCollectionFilter(e.target.value)
-                            }
-                        >
-                            <option value="">All Collections</option>
-                            {collections.map((c) => (
-                                <option key={c.id} value={c.id}>
-                                    {c.name}
-                                </option>
-                            ))}
-                        </select>
+                        {/* Collection Custom Dropdown */}
+                        <div className="relative z-40" ref={collectionRef}>
+                            <button
+                                className="flex w-56 items-center justify-between gap-2 rounded-lg border border-white/10 bg-[#161b22] px-3 py-2 text-sm text-gray-300 transition-colors outline-none hover:bg-white/5 focus:border-cyan-500/50"
+                                onClick={() =>
+                                    setIsCollectionOpen(!isCollectionOpen)
+                                }
+                            >
+                                <div className="flex items-center gap-2 truncate">
+                                    {collectionFilter ? (
+                                        <>
+                                            <img
+                                                src={
+                                                    collections.find(
+                                                        (c) =>
+                                                            String(c.id) ===
+                                                            collectionFilter,
+                                                    )?.image_url
+                                                }
+                                                alt=""
+                                                className="h-5 w-7 shrink-0 object-contain"
+                                            />
+                                            <span className="truncate">
+                                                {
+                                                    collections.find(
+                                                        (c) =>
+                                                            String(c.id) ===
+                                                            collectionFilter,
+                                                    )?.name
+                                                }
+                                            </span>
+                                        </>
+                                    ) : (
+                                        'All Collections'
+                                    )}
+                                </div>
+                                <span className="shrink-0 text-[10px] text-gray-500">
+                                    ▼
+                                </span>
+                            </button>
 
-                        {/* Rarity */}
-                        <select
-                            className="rounded-lg border border-white/10 bg-[#161b22] px-3 py-2 text-sm text-gray-300 outline-none transition-colors focus:border-cyan-500/50"
-                            style={{ colorScheme: 'dark' }}
-                            value={rarityFilter}
-                            onChange={(e) => setRarityFilter(e.target.value)}
-                        >
-                            {!contractRarity ? (
-                                rarities.map((r) => (
-                                    <option key={r.id} value={r.id}>
-                                        {r.name}
-                                    </option>
-                                ))
-                            ) : (
-                                <option value={contractRarity.id}>
-                                    {contractRarity.name}
-                                </option>
+                            {isCollectionOpen && (
+                                <div
+                                    className="absolute top-full left-0 mt-1 max-h-60 w-72 overflow-y-auto rounded-lg border border-white/10 bg-[#161b22] shadow-xl shadow-black/50"
+                                    style={{
+                                        scrollbarWidth: 'thin',
+                                        scrollbarColor: '#334155 transparent',
+                                    }}
+                                >
+                                    <button
+                                        className={`flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-white/10 ${collectionFilter === '' ? 'bg-white/5 text-white' : 'text-gray-400'}`}
+                                        onClick={() => {
+                                            setCollectionFilter('');
+                                            setIsCollectionOpen(false);
+                                        }}
+                                    >
+                                        <div className="w-7 shrink-0"></div>
+                                        <span>All Collections</span>
+                                    </button>
+                                    {collections.map((c) => (
+                                        <button
+                                            key={c.id}
+                                            className={`flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-white/10 ${collectionFilter === String(c.id) ? 'bg-white/5 text-white' : 'text-gray-400'}`}
+                                            onClick={() => {
+                                                setCollectionFilter(
+                                                    String(c.id),
+                                                );
+                                                setIsCollectionOpen(false);
+                                            }}
+                                        >
+                                            <img
+                                                src={c.image_url}
+                                                alt=""
+                                                className="h-5 w-7 shrink-0 object-contain"
+                                            />
+                                            <span className="truncate text-left">
+                                                {c.name}
+                                            </span>
+                                        </button>
+                                    ))}
+                                </div>
                             )}
-                        </select>
+                        </div>
+
+                        {/* Rarity Custom Dropdown */}
+                        <div className="relative z-30" ref={rarityRef}>
+                            <button
+                                className={`flex w-48 items-center justify-between gap-2 rounded-lg border border-white/10 bg-[#161b22] px-3 py-2 text-sm transition-colors outline-none hover:bg-white/5 focus:border-cyan-500/50 ${contractRarity ? 'cursor-not-allowed opacity-50' : ''}`}
+                                onClick={() =>
+                                    !contractRarity &&
+                                    setIsRarityOpen(!isRarityOpen)
+                                }
+                            >
+                                <div className="flex items-center gap-2 truncate text-gray-300">
+                                    {contractRarity ? (
+                                        <>
+                                            <span
+                                                className="h-2.5 w-2.5 shrink-0 rounded-full"
+                                                style={{
+                                                    backgroundColor:
+                                                        contractRarity.color_hex,
+                                                }}
+                                            />
+                                            <span className="truncate">
+                                                {contractRarity.name}
+                                            </span>
+                                        </>
+                                    ) : rarityFilter ? (
+                                        <>
+                                            <span
+                                                className="h-2.5 w-2.5 shrink-0 rounded-full"
+                                                style={{
+                                                    backgroundColor:
+                                                        rarities.find(
+                                                            (r) =>
+                                                                String(r.id) ===
+                                                                rarityFilter,
+                                                        )?.color_hex,
+                                                }}
+                                            />
+                                            <span className="truncate">
+                                                {
+                                                    rarities.find(
+                                                        (r) =>
+                                                            String(r.id) ===
+                                                            rarityFilter,
+                                                    )?.name
+                                                }
+                                            </span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span className="h-2.5 w-2.5 shrink-0 rounded-full border border-gray-500 bg-transparent" />
+                                            <span className="truncate">
+                                                All Rarities
+                                            </span>
+                                        </>
+                                    )}
+                                </div>
+                                <span className="shrink-0 text-[10px] text-gray-500">
+                                    ▼
+                                </span>
+                            </button>
+
+                            {isRarityOpen && !contractRarity && (
+                                <div
+                                    className="absolute top-full left-0 mt-1 max-h-60 w-48 overflow-y-auto rounded-lg border border-white/10 bg-[#161b22] shadow-xl shadow-black/50"
+                                    style={{
+                                        scrollbarWidth: 'thin',
+                                        scrollbarColor: '#334155 transparent',
+                                    }}
+                                >
+                                    <button
+                                        className={`flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-white/10 ${rarityFilter === '' ? 'bg-white/5 text-white' : 'text-gray-400'}`}
+                                        onClick={() => {
+                                            setRarityFilter('');
+                                            setIsRarityOpen(false);
+                                        }}
+                                    >
+                                        <span className="h-2.5 w-2.5 shrink-0 rounded-full border border-gray-500 bg-transparent" />
+                                        <span>All Rarities</span>
+                                    </button>
+                                    {rarities.map((r) => (
+                                        <button
+                                            key={r.id}
+                                            className={`flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-white/10 ${rarityFilter === String(r.id) ? 'bg-white/5 text-white' : 'text-gray-400'}`}
+                                            onClick={() => {
+                                                setRarityFilter(String(r.id));
+                                                setIsRarityOpen(false);
+                                            }}
+                                        >
+                                            <span
+                                                className="h-2.5 w-2.5 shrink-0 rounded-full"
+                                                style={{
+                                                    backgroundColor:
+                                                        r.color_hex,
+                                                }}
+                                            />
+                                            <span className="truncate text-left">
+                                                {r.name}
+                                            </span>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
 
                         {/* StatTrak toggle */}
                         <button
@@ -260,7 +432,7 @@ export default function SelectSkin({
                             className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-all ${
                                 statTrakFilter === '1'
                                     ? 'border-amber-500/30 bg-amber-500/10 text-amber-400'
-                                    : 'border-white/10 bg-white/5 text-gray-400 hover:border-white/20'
+                                    : 'border-white/10 bg-[#161b22] text-gray-400 hover:border-white/20 hover:bg-white/5'
                             } ${contractStatTrak != null ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
                             onClick={() => {
                                 if (contractStatTrak != null) return;
@@ -280,14 +452,14 @@ export default function SelectSkin({
                         </button>
 
                         {/* Condition pills */}
-                        <div className="flex rounded-lg border border-white/10 bg-white/5 p-0.5">
+                        <div className="flex rounded-lg border border-white/10 bg-[#161b22] p-0.5">
                             {CONDITIONS.map((cond) => (
                                 <button
                                     key={cond}
                                     className={`rounded-md px-2.5 py-1.5 text-xs font-medium transition-all ${
                                         conditionFilter === cond
                                             ? 'bg-cyan-500/20 text-cyan-400 shadow-sm'
-                                            : 'text-gray-500 hover:text-gray-300'
+                                            : 'text-gray-500 hover:bg-white/5 hover:text-gray-300'
                                     }`}
                                     onClick={() => setConditionFilter(cond)}
                                 >
@@ -355,7 +527,14 @@ export default function SelectSkin({
                                                 borderTopWidth: '2px',
                                             }}
                                         >
-                                            <div className="flex items-center justify-center bg-white/[0.02] p-4">
+                                            <div className="relative flex items-center justify-center bg-white/[0.02] p-4">
+                                                {(skin.statTrak == true ||
+                                                    String(skin.statTrak) ===
+                                                        '1') && (
+                                                    <div className="absolute top-2 left-2 rounded bg-gradient-to-r from-amber-600 to-amber-500 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-md">
+                                                        ST™
+                                                    </div>
+                                                )}
                                                 <img
                                                     src={skin.image_url}
                                                     alt={skin.name}
@@ -378,12 +557,6 @@ export default function SelectSkin({
                                                     <span className="text-sm font-bold text-white">
                                                         ${price.toFixed(2)}
                                                     </span>
-                                                    {skin.statTrak ===
-                                                        true && (
-                                                        <span className="text-[10px] font-bold text-amber-400">
-                                                            ST™
-                                                        </span>
-                                                    )}
                                                 </div>
                                                 <p className="font-mono text-[10px] text-gray-500">
                                                     {skin.min_float.toFixed(2)}{' '}
@@ -401,8 +574,7 @@ export default function SelectSkin({
                                 <div className="flex flex-col items-center justify-center py-16">
                                     <Search className="mb-3 h-10 w-10 text-gray-600" />
                                     <p className="text-sm text-gray-500">
-                                        No skins found for the selected
-                                        filters.
+                                        No skins found for the selected filters.
                                     </p>
                                 </div>
                             )}

@@ -135,10 +135,10 @@ export default function OutputArea({
                                     >
                                         ${price.toFixed(2)}
                                     </p>
-                                    {skin.statTrak === true && (
-                                        <span className="text-[10px] font-bold text-amber-400">
-                                            ST™
-                                        </span>
+                                    {(skin.statTrak == true || String(skin.statTrak) === '1') && (
+                                        <div className="mt-1 inline-block rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-bold text-amber-400 border border-amber-500/30">
+                                            StatTrak™
+                                        </div>
                                     )}
                                 </div>
                             </div>

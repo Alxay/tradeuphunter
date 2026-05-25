@@ -196,6 +196,19 @@ export default function Index({ apiData, collections, rarities }: Props) {
         }
     }
 
+    function fillEmptySlots(skin: Skin) {
+        lastChangeType.current = 'composition';
+        setSelectedSkins((prev) => {
+            const next = [...prev];
+            for (let i = 0; i < 10; i++) {
+                if (next[i] === null) {
+                    next[i] = skin;
+                }
+            }
+            return next;
+        });
+    }
+
     // ── Fetch trade-up output when contract changes ──
 
     useEffect(() => {
@@ -287,6 +300,7 @@ export default function Index({ apiData, collections, rarities }: Props) {
                         }}
                         onSlotClick={(i) => openPicker(i)}
                         duplicateSkin={duplicateSkin}
+                        fillEmptySlots={fillEmptySlots}
                         delSkin={delSkin}
                         updateFloat={updateFloat}
                         conditionToPrice={conditionToPrice}

@@ -6,6 +6,7 @@ interface Props {
     skins: (Skin | null)[];
     onSlotClick: (index: number) => void;
     duplicateSkin: (skin: Skin) => void;
+    fillEmptySlots: (skin: Skin) => void;
     delSkin: (index: number) => void;
     updateFloat: (position: number, value: number) => void;
     reset: () => void;
@@ -16,6 +17,7 @@ export default function InputArea({
     skins,
     onSlotClick,
     duplicateSkin,
+    fillEmptySlots,
     delSkin,
     reset,
     updateFloat,
@@ -57,6 +59,7 @@ export default function InputArea({
                         position={index}
                         skin={skins[index]}
                         duplicateSkin={duplicateSkin}
+                        fillEmptySlots={fillEmptySlots}
                         delSkin={delSkin}
                         onClick={() => onSlotClick(index)}
                         updateFloat={updateFloat}

@@ -20,7 +20,7 @@ class DataController extends Controller
 
         $page = $validated['page'] ?? 1;
         $collection = $validated['collection'] ?? null;
-        $rarity = $validated['rarity'] ?? '1';
+        $rarity = $validated['rarity'] ?? null;
         $condition = $validated['condition'] ?? 'Minimal Wear';
         $statTrak = $validated['statTrak'] ?? false;
         $search = $validated['search'] ?? null;
