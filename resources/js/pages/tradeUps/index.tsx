@@ -1,13 +1,12 @@
 import { Head } from '@inertiajs/react';
 import { dashboard } from '@/routes';
 import axios from 'axios';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import InputArea from './inputArea';
 import OutputArea from './outputArea';
 import StatsBar from './statsBar';
 import SelectSkin from './selectSkin';
 import { Rarity, Skin, ApiData, Collection } from '../../types/skin';
-import { useRef } from 'react';
 
 interface Props {
     apiData: ApiData;
@@ -18,7 +17,7 @@ interface Props {
 Index.layout = {
     breadcrumbs: [
         {
-            title: 'TradeUps',
+            title: 'Trade-Up Simulator',
             href: dashboard(),
         },
     ],
@@ -34,22 +33,25 @@ export default function Index({ apiData, collections, rarities }: Props) {
     const [avgNormalizedFloat, setAvgNormalizedFloat] = useState(0);
     const lastChangeType = useRef<'composition' | 'float'>('composition');
 
-    // 1. Dynamicznie sprawdzamy rzadkość na podstawie pierwszego wrzuconego skina
+    // Rarity is locked to the first added skin's rarity
     const contractRarity = useMemo(() => {
-        const firstSkin = selectedSkins.find((s) => s !== null);
-        return firstSkin ? firstSkin.rarity : null;
+        const first = selectedSkins.find((s) => s !== null);
+        return first ? first.rarity : null;
     }, [selectedSkins]);
 
+    // StatTrak is locked to the first added skin's statTrak flag
     const contractStatTrak = useMemo(() => {
-        const firstSkin = selectedSkins.find((s) => s !== null);
-        return firstSkin ? firstSkin.statTrak : null;
+        const first = selectedSkins.find((s) => s !== null);
+        return first ? first.statTrak : null;
     }, [selectedSkins]);
 
-    // 2. Czy kontrakt ma komplet 10 skinów
+    // Is the contract full (10/10)?
     const isFull = useMemo(
         () => selectedSkins.every((s) => s !== null),
         [selectedSkins],
     );
+
+    // ── Utility helpers ──
 
     function conditionToPrice(skin: Skin): number {
         switch (skin.condition ?? 'Field-Tested') {
@@ -70,26 +72,23 @@ export default function Index({ apiData, collections, rarities }: Props) {
 
     function getConditionFromFloat(skin: Skin): string {
         if (skin.float == null) return 'N/A';
-        const float = skin.float;
-        if (float >= 0 && float < 0.07) return 'Factory New';
-        if (float >= 0.07 && float < 0.15) return 'Minimal Wear';
-        if (float >= 0.15 && float < 0.38) return 'Field-Tested';
-        if (float >= 0.38 && float < 0.45) return 'Well-Worn';
-        if (float >= 0.45 && float <= 1.0) return 'Battle-Scarred';
+        const f = skin.float;
+        if (f >= 0 && f < 0.07) return 'Factory New';
+        if (f >= 0.07 && f < 0.15) return 'Minimal Wear';
+        if (f >= 0.15 && f < 0.38) return 'Field-Tested';
+        if (f >= 0.38 && f < 0.45) return 'Well-Worn';
+        if (f >= 0.45 && f <= 1.0) return 'Battle-Scarred';
         return 'N/A';
     }
 
     function getSkinNormalizedFloat(skin: Skin, float: number): number {
         const range = skin.max_float - skin.min_float;
-
-        if (range <= 0) {
-            return 0;
-        }
-
+        if (range <= 0) return 0;
         return (float - skin.min_float) / range;
     }
 
-    // 3. Jedyne źródło prawdy dla statystyk (Brak useState dla pojedynczych liczb!)
+    // ── Derived stats (single source of truth) ──
+
     const stats = useMemo(() => {
         const inputCost = selectedSkins.reduce(
             (sum, skin) => sum + (skin ? conditionToPrice(skin) : 0),
@@ -132,6 +131,8 @@ export default function Index({ apiData, collections, rarities }: Props) {
         };
     }, [selectedSkins, outputSkins]);
 
+    // ── Handlers ──
+
     function openPicker(index: number) {
         setSelectedSlot(index);
         setSelectingSkin(true);
@@ -150,7 +151,6 @@ export default function Index({ apiData, collections, rarities }: Props) {
     }
 
     function delSkin(index: number) {
-        console.log('Usuwam skina z indexu:', index);
         lastChangeType.current = 'composition';
         setSelectedSkins((prev) => {
             const next = [...prev];
@@ -164,60 +164,76 @@ export default function Index({ apiData, collections, rarities }: Props) {
         setSelectedSkins((prev) => {
             const next = [...prev];
             if (next[position]) {
-                next[position] = { ...next[position], float: value };
+                const updated: Skin = { ...next[position]!, float: value };
+                // Keep condition in sync with float (immutably)
+                updated.condition = getConditionFromFloat(updated);
+                next[position] = updated;
             }
-            // If contract is full after this change, compute average based on the updated array
             if (next.every((s) => s !== null)) {
-                const avgFloat =
+                const avg =
                     next.reduce(
-                        (sum, skin) =>
-                            sum + getSkinNormalizedFloat(skin, skin.float || 0),
+                        (sum, s) =>
+                            sum + getSkinNormalizedFloat(s!, s!.float || 0),
                         0,
                     ) / next.length;
-                setAvgNormalizedFloat(avgFloat);
+                setAvgNormalizedFloat(avg);
             }
             return next;
         });
     }
 
-    // 4. Pobieranie danych z API z poprawnymi zależnościami
+    function duplicateSkin(skin: Skin) {
+        for (let i = 0; i < 10; i++) {
+            if (selectedSkins[i] === null) {
+                lastChangeType.current = 'composition';
+                setSelectedSkins((prev) => {
+                    const next = [...prev];
+                    next[i] = skin;
+                    return next;
+                });
+                break;
+            }
+        }
+    }
+
+    // ── Fetch trade-up output when contract changes ──
+
     useEffect(() => {
         if (!isFull) {
-            if (outputSkins.length > 0) setOutputSkins([]); // Czyścimy wyniki, jeśli wyciągnięto skina
+            if (outputSkins.length > 0) setOutputSkins([]);
             return;
         }
 
         const avgFloat =
-            selectedSkins.reduce((sum, skin) => sum + (skin?.float || 0), 0) /
+            selectedSkins.reduce((sum, s) => sum + (s?.float || 0), 0) /
             selectedSkins.length;
-        const normalizedAvgFloat =
-            selectedSkins.reduce((sum, skin) => {
-                if (!skin) {
-                    return sum;
-                }
 
-                return sum + getSkinNormalizedFloat(skin, skin.float || 0);
+        const normalizedAvg =
+            selectedSkins.reduce((sum, s) => {
+                if (!s) return sum;
+                return sum + getSkinNormalizedFloat(s, s.float || 0);
             }, 0) / selectedSkins.length;
 
-        setAvgNormalizedFloat(normalizedAvgFloat);
+        setAvgNormalizedFloat(normalizedAvg);
 
+        // Float-only change → recalculate locally, no API call
         if (lastChangeType.current === 'float') {
             setOutputSkins((prev) =>
                 prev.map((skin) => {
-                    const nextSkin = { ...skin };
-                    nextSkin.float =
-                        avgFloat * (nextSkin.max_float - nextSkin.min_float) +
-                        nextSkin.min_float;
-                    nextSkin.condition = getConditionFromFloat(nextSkin);
-                    return nextSkin;
+                    const newFloat =
+                        avgFloat * (skin.max_float - skin.min_float) +
+                        skin.min_float;
+                    const updated: Skin = { ...skin, float: newFloat };
+                    updated.condition = getConditionFromFloat(updated);
+                    return updated;
                 }),
             );
             return;
         }
 
+        // Composition change → fetch from API
         const rarityId = contractRarity ? contractRarity.id : 1;
-
-        const collectionIds = selectedSkins.map((skin) => skin!.collection_id);
+        const collectionIds = selectedSkins.map((s) => s!.collection_id);
 
         axios
             .get('/api/tradeup', {
@@ -229,40 +245,29 @@ export default function Index({ apiData, collections, rarities }: Props) {
                 },
             })
             .then((response) => {
-                console.log('Otrzymane dane z API:', response.data);
-                response.data.map((skin: Skin) => {
-                    skin.float =
-                        avgFloat * (skin.max_float - skin.min_float) +
-                        skin.min_float;
-                    skin.condition = getConditionFromFloat(skin);
-                });
-                setOutputSkins(response.data);
+                const processed: Skin[] = (response.data as Skin[]).map(
+                    (skin) => {
+                        const newFloat =
+                            avgFloat * (skin.max_float - skin.min_float) +
+                            skin.min_float;
+                        const updated: Skin = { ...skin, float: newFloat };
+                        updated.condition = getConditionFromFloat(updated);
+                        return updated;
+                    },
+                );
+                setOutputSkins(processed);
             })
             .catch((error) => {
                 console.error('Error fetching tradeup results:', error);
             });
-        // selectedSkins musi tu być, by zmiana dowolnego skina przy pełnym kontrakcie wysłała nowe zapytanie
     }, [selectedSkins]);
 
-    function duplicateSkin(skin: unknown) {
-        for (let i = 0; i < 10; i++) {
-            if (selectedSkins[i] === null) {
-                lastChangeType.current = 'composition';
-                setSelectedSkins((prev) => {
-                    const next = [...prev];
-                    next[i] = skin as Skin;
-                    return next;
-                });
-                break;
-            }
-        }
-    }
+    // ── Render ──
 
     return (
         <>
-            <Head title="Dashboard" />
-            <div className="min-h-[80vh] bg-[#0B0E14] p-6 text-white">
-                {/* Przekazujemy wartości bezpośrednio z obiektu stats */}
+            <Head title="Trade-Up Simulator" />
+            <div className="min-h-[80vh] bg-[#0a0d14] p-6 text-white">
                 <StatsBar
                     EV={stats.ev}
                     inputCost={stats.inputCost}
@@ -273,7 +278,7 @@ export default function Index({ apiData, collections, rarities }: Props) {
                     avgNormalizedFloat={avgNormalizedFloat}
                 />
 
-                <div className="flex gap-6">
+                <div className="flex flex-col gap-6 lg:flex-row">
                     <InputArea
                         skins={selectedSkins}
                         reset={() => {
@@ -288,6 +293,7 @@ export default function Index({ apiData, collections, rarities }: Props) {
                     />
                     <OutputArea
                         outputSkins={outputSkins}
+                        inputCost={stats.inputCost}
                         getConditionFromFloat={getConditionFromFloat}
                         conditionToPrice={conditionToPrice}
                     />

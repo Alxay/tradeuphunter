@@ -15,6 +15,7 @@ class DataController extends Controller
             'rarity' => 'nullable|string|in:1,2,3,4,5,6',
             'condition' => 'nullable|string|in:Factory New,Minimal Wear,Field-Tested,Well-Worn,Battle-Scarred',
             'statTrak' => 'nullable|boolean',
+            'search' => 'nullable|string|max:100',
         ]);
 
         $page = $validated['page'] ?? 1;
@@ -22,10 +23,11 @@ class DataController extends Controller
         $rarity = $validated['rarity'] ?? '1';
         $condition = $validated['condition'] ?? 'Minimal Wear';
         $statTrak = $validated['statTrak'] ?? false;
+        $search = $validated['search'] ?? null;
         $perPage = 40;
 
         $dataManager = new DataManager();
-        return $dataManager->getSkins($page, $perPage, $condition, $collection, $rarity, $statTrak);
+        return $dataManager->getSkins($page, $perPage, $condition, $collection, $rarity, $statTrak, $search);
     }
 
     public function calculateTradeUp(Request $request){

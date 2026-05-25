@@ -9,13 +9,16 @@ use App\Models\Rarity;
 
 class DataManager extends Model
 {
-    public function getSkins($page = 1, $perPage = 40, $condition = "Minimal Wear", $collection = null, $rarity = null, $statTrak = false){
+    public function getSkins($page = 1, $perPage = 40, $condition = "Minimal Wear", $collection = null, $rarity = null, $statTrak = false, $search = null){
         $result = Skin::with(['rarity'])
             ->when($collection, function ($query) use ($collection) {
                 return $query->where('collection_id', $collection);
             })
             ->when($rarity, function ($query) use ($rarity) {
                 return $query->where('rarity_id', $rarity);
+            })
+            ->when($search, function ($query) use ($search) {
+                return $query->where('name', 'like', '%' . $search . '%');
             })
             ->orderBy('rarity_id', 'asc')
             ->paginate($perPage, ['*'], 'page', $page);
