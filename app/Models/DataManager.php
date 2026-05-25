@@ -18,7 +18,19 @@ class DataManager extends Model
                 return $query->where('rarity_id', $rarity);
             })
             ->when($search, function ($query) use ($search) {
-                return $query->where('name', 'like', '%' . $search . '%');
+                $cleaned = str_replace('|', ' ', $search);
+                $terms = array_filter(explode(' ', trim($cleaned)));
+
+                return $query->where(function ($q) use ($terms) {
+                    foreach ($terms as $term) {
+                        $q->where(function ($inner) use ($term) {
+                            $inner->where('name', 'like', '%' . $term . '%')
+                                  ->orWhereHas('weapon', function ($wq) use ($term) {
+                                      $wq->where('name', 'like', '%' . $term . '%');
+                                  });
+                        });
+                    }
+                });
             })
             ->orderBy('rarity_id', 'asc')
             ->paginate($perPage, ['*'], 'page', $page);

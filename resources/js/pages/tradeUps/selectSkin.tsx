@@ -219,7 +219,8 @@ export default function SelectSkin({
                     <div className="flex flex-wrap items-center gap-3">
                         {/* Collection */}
                         <select
-                            className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-gray-300 outline-none transition-colors focus:border-cyan-500/50"
+                            className="rounded-lg border border-white/10 bg-[#161b22] px-3 py-2 text-sm text-gray-300 outline-none transition-colors focus:border-cyan-500/50"
+                            style={{ colorScheme: 'dark' }}
                             value={collectionFilter}
                             onChange={(e) =>
                                 setCollectionFilter(e.target.value)
@@ -235,7 +236,8 @@ export default function SelectSkin({
 
                         {/* Rarity */}
                         <select
-                            className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-gray-300 outline-none transition-colors focus:border-cyan-500/50"
+                            className="rounded-lg border border-white/10 bg-[#161b22] px-3 py-2 text-sm text-gray-300 outline-none transition-colors focus:border-cyan-500/50"
+                            style={{ colorScheme: 'dark' }}
                             value={rarityFilter}
                             onChange={(e) => setRarityFilter(e.target.value)}
                         >
