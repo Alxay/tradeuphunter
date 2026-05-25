@@ -106,19 +106,23 @@ export default function Index({ apiData, collections, rarities }: Props) {
             };
         }
 
-        const ev =
-            outputSkins.reduce(
-                (sum, skin) => sum + (skin ? conditionToPrice(skin) : 0),
-                0,
-            ) / outputSkins.length;
+        const ev = outputSkins.reduce((sum, skin) => {
+            const price = skin ? conditionToPrice(skin) : 0;
+            const chance = skin?.chance ? skin.chance : 0;
+            return sum + price * (chance / 100);
+        }, 0);
 
         const roi = inputCost > 0 ? ((ev - inputCost) / inputCost) * 100 : 0;
 
-        const profitSkinsCount = outputSkins.filter(
-            (skin) => (skin ? conditionToPrice(skin) : 0) > inputCost,
-        ).length;
+        const chanceForProfit = outputSkins.reduce((sum, skin) => {
+            const price = skin ? conditionToPrice(skin) : 0;
+            const chance = skin?.chance ? skin.chance : 0;
+            if (price > inputCost) {
+                return sum + chance;
+            }
+            return sum;
+        }, 0);
 
-        const chanceForProfit = (profitSkinsCount / outputSkins.length) * 100;
         const expectedProfit = ev - inputCost;
 
         return {

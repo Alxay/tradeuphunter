@@ -112,7 +112,7 @@ export default function SelectSkin({
             document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    // Build API params (condition excluded — backend does not use it)
+    // Build API params (condition excluded — backend does not use it / prevent refetch)
     const getApiParams = useCallback(
         (page: number) => ({
             page,
@@ -147,7 +147,7 @@ export default function SelectSkin({
 
     // ---- Infinite scroll with IntersectionObserver ----
     useEffect(() => {
-        if (currentPage >= lastPage) return;
+        if (!visible || currentPage >= lastPage) return;
 
         const observer = new IntersectionObserver((entries) => {
             if (entries[0].isIntersecting && !isLoadingMoreRef.current) {
@@ -158,11 +158,16 @@ export default function SelectSkin({
                         params: getApiParams(currentPage + 1),
                     })
                     .then((res) => {
-                        setSkins((prev) => [...prev, ...(res.data.data || [])]);
+                        setSkins((prev) => [
+                            ...prev,
+                            ...(res.data.data || []),
+                        ]);
                         setCurrentPage(res.data.current_page);
                         setLastPage(res.data.last_page);
                     })
-                    .catch((err) => console.error('Failed to load more:', err))
+                    .catch((err) =>
+                        console.error('Failed to load more:', err),
+                    )
                     .finally(() => {
                         isLoadingMoreRef.current = false;
                     });
@@ -174,7 +179,7 @@ export default function SelectSkin({
         return () => {
             if (el) observer.unobserve(el);
         };
-    }, [currentPage, lastPage, getApiParams]);
+    }, [currentPage, lastPage, getApiParams, visible]);
 
     // ---- Debounced search ----
     const handleSearchInput = (value: string) => {
@@ -499,7 +504,9 @@ export default function SelectSkin({
                     ) : (
                         <>
                             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                                {skins.map((skin) => {
+                                {skins
+                                    .filter((skin) => getPriceByCondition(skin, conditionFilter) > 0)
+                                    .map((skin) => {
                                     const price = getPriceByCondition(
                                         skin,
                                         conditionFilter,
