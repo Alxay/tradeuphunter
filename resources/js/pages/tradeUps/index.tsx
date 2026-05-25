@@ -7,6 +7,7 @@ import OutputArea from './outputArea';
 import StatsBar from './statsBar';
 import SelectSkin from './selectSkin';
 import { Rarity, Skin, ApiData, Collection } from '../../types/skin';
+import { useRef } from 'react';
 
 interface Props {
     apiData: ApiData;
@@ -31,6 +32,7 @@ export default function Index({ apiData, collections, rarities }: Props) {
     );
     const [outputSkins, setOutputSkins] = useState<Skin[]>([]);
     const [avgNormalizedFloat, setAvgNormalizedFloat] = useState(0);
+    const lastChangeType = useRef<'composition' | 'float'>('composition');
 
     // 1. Dynamicznie sprawdzamy rzadkość na podstawie pierwszego wrzuconego skina
     const contractRarity = useMemo(() => {
@@ -137,6 +139,7 @@ export default function Index({ apiData, collections, rarities }: Props) {
 
     function handleSkinSelect(skin: Skin) {
         if (selectedSlot === null) return;
+        lastChangeType.current = 'composition';
         setSelectedSkins((prev) => {
             const next = [...prev];
             next[selectedSlot] = skin;
@@ -148,6 +151,7 @@ export default function Index({ apiData, collections, rarities }: Props) {
 
     function delSkin(index: number) {
         console.log('Usuwam skina z indexu:', index);
+        lastChangeType.current = 'composition';
         setSelectedSkins((prev) => {
             const next = [...prev];
             next[index] = null;
@@ -156,6 +160,7 @@ export default function Index({ apiData, collections, rarities }: Props) {
     }
 
     function updateFloat(position: number, value: number) {
+        lastChangeType.current = 'float';
         setSelectedSkins((prev) => {
             const next = [...prev];
             if (next[position]) {
@@ -196,11 +201,23 @@ export default function Index({ apiData, collections, rarities }: Props) {
 
         setAvgNormalizedFloat(normalizedAvgFloat);
 
+        if (lastChangeType.current === 'float') {
+            setOutputSkins((prev) =>
+                prev.map((skin) => {
+                    const nextSkin = { ...skin };
+                    nextSkin.float =
+                        avgFloat * (nextSkin.max_float - nextSkin.min_float) +
+                        nextSkin.min_float;
+                    nextSkin.condition = getConditionFromFloat(nextSkin);
+                    return nextSkin;
+                }),
+            );
+            return;
+        }
+
         const rarityId = contractRarity ? contractRarity.id : 1;
 
-        const collectionIds = Array.from(
-            new Set(selectedSkins.map((s) => s!.collection_id)),
-        );
+        const collectionIds = selectedSkins.map((skin) => skin!.collection_id);
 
         axios
             .get('/api/tradeup', {
@@ -213,12 +230,9 @@ export default function Index({ apiData, collections, rarities }: Props) {
             })
             .then((response) => {
                 console.log('Otrzymane dane z API:', response.data);
-                // Use the locally computed avgFloat (absolute float) instead of
-                // the state `avgNormalizedFloat` which may be stale.
                 response.data.map((skin: Skin) => {
-                    // avgFloat is an absolute float value (0..1 range), so assign directly
                     skin.float =
-                        normalizedAvgFloat * (skin.max_float - skin.min_float) +
+                        avgFloat * (skin.max_float - skin.min_float) +
                         skin.min_float;
                     skin.condition = getConditionFromFloat(skin);
                 });
@@ -233,6 +247,7 @@ export default function Index({ apiData, collections, rarities }: Props) {
     function duplicateSkin(skin: unknown) {
         for (let i = 0; i < 10; i++) {
             if (selectedSkins[i] === null) {
+                lastChangeType.current = 'composition';
                 setSelectedSkins((prev) => {
                     const next = [...prev];
                     next[i] = skin as Skin;
@@ -261,7 +276,10 @@ export default function Index({ apiData, collections, rarities }: Props) {
                 <div className="flex gap-6">
                     <InputArea
                         skins={selectedSkins}
-                        reset={() => setSelectedSkins(Array(10).fill(null))}
+                        reset={() => {
+                            lastChangeType.current = 'composition';
+                            setSelectedSkins(Array(10).fill(null));
+                        }}
                         onSlotClick={(i) => openPicker(i)}
                         duplicateSkin={duplicateSkin}
                         delSkin={delSkin}

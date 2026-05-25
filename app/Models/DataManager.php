@@ -49,12 +49,19 @@ class DataManager extends Model
     public function calculateTradeUp($avgInputFloat, $rarity, $collections, $statTrak = false)
     {
         $outputRarityId = $rarity -1;
+        $inputCollectionCounts = array_count_values($collections);
+        $totalInputSkins = array_sum($inputCollectionCounts) ?: 1;
+
         $outputSkins = Skin::with(['rarity'])
             ->where('rarity_id', $outputRarityId)
             ->whereIn('collection_id', $collections)
             ->get();
 
-        $outputSkins = $outputSkins->map(function ($skin) use ($statTrak) {
+        $outputCountsByCollection = $outputSkins
+            ->groupBy('collection_id')
+            ->map(fn ($skins) => $skins->count());
+
+        $outputSkins = $outputSkins->map(function ($skin) use ($statTrak, $inputCollectionCounts, $outputCountsByCollection, $totalInputSkins) {
             $prices = $skin->prices()
                 ->where('is_stattrak', $statTrak)
                 ->get()
@@ -66,6 +73,10 @@ class DataManager extends Model
             $skin->priceMW = $prices->get("Minimal Wear") ?->price_30d ?? $prices->get("Minimal Wear") ?->price_90d;
             $skin->priceFN = $prices->get("Factory New") ?->price_30d ?? $prices->get("Factory New") ?->price_90d;
             $skin->statTrak = $statTrak;
+            $collectionChance = (($inputCollectionCounts[$skin->collection_id] ?? 0) / $totalInputSkins) * 100;
+            $outputCount = $outputCountsByCollection->get($skin->collection_id, 1);
+            $skin->collectionChance = $collectionChance;
+            $skin->chance = $outputCount > 0 ? $collectionChance / $outputCount : 0;
             return $skin;
         });
 

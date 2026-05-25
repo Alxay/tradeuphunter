@@ -37,6 +37,18 @@ export default function OutputArea({
                                     : 'N/A'}
                             </p>
                             <p className="text-sm text-gray-400">
+                                Chance:{' '}
+                                {skin.chance != null
+                                    ? skin.chance.toFixed(2) + '%'
+                                    : 'N/A'}
+                            </p>
+                            <p className="text-sm text-gray-400">
+                                Collection chance:{' '}
+                                {skin.collectionChance != null
+                                    ? skin.collectionChance.toFixed(2) + '%'
+                                    : 'N/A'}
+                            </p>
+                            <p className="text-sm text-gray-400">
                                 Float:{' '}
                                 {skin.float != null
                                     ? skin.float.toFixed(10)

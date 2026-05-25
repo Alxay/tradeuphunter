@@ -26,6 +26,8 @@ export interface Skin {
     priceFN?: number;
     // legacy single price field sometimes used in other pages
     price?: number;
+    chance?: number;
+    collectionChance?: number;
     condition?: string | null;
     statTrak: boolean;
     float?: number | null;
