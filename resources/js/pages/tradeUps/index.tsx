@@ -78,7 +78,13 @@ export default function Index({ apiData, collections, rarities }: Props) {
     }
 
     function getSkinNormalizedFloat(skin: Skin, float: number): number {
-        return float * (skin.max_float - skin.min_float) + skin.min_float;
+        const range = skin.max_float - skin.min_float;
+
+        if (range <= 0) {
+            return 0;
+        }
+
+        return (float - skin.min_float) / range;
     }
 
     // 3. Jedyne źródło prawdy dla statystyk (Brak useState dla pojedynczych liczb!)
@@ -158,8 +164,11 @@ export default function Index({ apiData, collections, rarities }: Props) {
             // If contract is full after this change, compute average based on the updated array
             if (next.every((s) => s !== null)) {
                 const avgFloat =
-                    next.reduce((sum, skin) => sum + (skin?.float || 0), 0) /
-                    next.length;
+                    next.reduce(
+                        (sum, skin) =>
+                            sum + getSkinNormalizedFloat(skin, skin.float || 0),
+                        0,
+                    ) / next.length;
                 setAvgNormalizedFloat(avgFloat);
             }
             return next;
@@ -176,7 +185,16 @@ export default function Index({ apiData, collections, rarities }: Props) {
         const avgFloat =
             selectedSkins.reduce((sum, skin) => sum + (skin?.float || 0), 0) /
             selectedSkins.length;
-        setAvgNormalizedFloat(avgFloat);
+        const normalizedAvgFloat =
+            selectedSkins.reduce((sum, skin) => {
+                if (!skin) {
+                    return sum;
+                }
+
+                return sum + getSkinNormalizedFloat(skin, skin.float || 0);
+            }, 0) / selectedSkins.length;
+
+        setAvgNormalizedFloat(normalizedAvgFloat);
 
         const rarityId = contractRarity ? contractRarity.id : 1;
 
@@ -199,7 +217,9 @@ export default function Index({ apiData, collections, rarities }: Props) {
                 // the state `avgNormalizedFloat` which may be stale.
                 response.data.map((skin: Skin) => {
                     // avgFloat is an absolute float value (0..1 range), so assign directly
-                    skin.float = avgFloat;
+                    skin.float =
+                        normalizedAvgFloat * (skin.max_float - skin.min_float) +
+                        skin.min_float;
                     skin.condition = getConditionFromFloat(skin);
                 });
                 setOutputSkins(response.data);
@@ -208,7 +228,7 @@ export default function Index({ apiData, collections, rarities }: Props) {
                 console.error('Error fetching tradeup results:', error);
             });
         // selectedSkins musi tu być, by zmiana dowolnego skina przy pełnym kontrakcie wysłała nowe zapytanie
-    }, [isFull, selectedSkins, contractRarity]);
+    }, [selectedSkins]);
 
     function duplicateSkin(skin: unknown) {
         for (let i = 0; i < 10; i++) {
