@@ -89,6 +89,31 @@ export default function Welcome() {
                         </Link>
                     </div>
 
+                    {/* Sponsored Affiliate Promo */}
+                    <div className="mx-auto max-w-lg mb-16">
+                        <a
+                            href="https://csgo-skins.com/?ref=ALXAY"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="group relative flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-orange-500/20 bg-orange-950/5 p-4 hover:border-orange-500/40 hover:bg-orange-950/10 transition-all duration-300 shadow-[0_0_20px_rgba(249,115,22,0.02)]"
+                        >
+                            <div className="absolute top-2.5 right-3 text-[8px] bg-slate-800/80 text-slate-400 px-1.5 py-0.5 rounded border border-white/5 uppercase tracking-wider font-extrabold">
+                                Sponsored / Affiliate Ad
+                            </div>
+                            <div className="text-left pr-4 pt-2 sm:pt-0">
+                                <h4 className="text-sm font-bold text-orange-400 flex items-center gap-1.5">
+                                    <span>CSGO-Skins.com</span>
+                                </h4>
+                                <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                                    Open CS2 cases, upgrade skins, and withdraw instantly. Use code <span className="font-extrabold text-orange-400">ALXAY</span> for a bonus!
+                                </p>
+                            </div>
+                            <div className="shrink-0 rounded-xl bg-orange-500 group-hover:bg-orange-400 px-4 py-2 text-xs font-bold text-black transition-colors">
+                                Claim Bonus
+                            </div>
+                        </a>
+                    </div>
+
                     {/* ── Key Features Grid ── */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto text-left">
                         {/* feature 1 */}
@@ -129,9 +154,14 @@ export default function Welcome() {
                 {/* Footer copy */}
                 <footer className="relative z-10 border-t border-white/5 bg-[#090d16]/30 py-8 mt-12 text-center text-xs text-slate-500">
                     <p className="max-w-md mx-auto leading-relaxed">
-                        &copy; 2026 TradeUpHunter. We are not affiliated with Valve Corp. or Steam. 
+                        &copy; 2026 alxay.ninja / TradeUpHunter. We are not affiliated with Valve Corp. or Steam. 
                         Skin prices are estimated based on safe 30d/90d averages and updated automatically.
                     </p>
+                    <div className="mt-4 flex items-center justify-center gap-4">
+                        <Link href="/privacy" className="text-slate-400 hover:text-orange-400 transition-colors">
+                            Privacy Policy
+                        </Link>
+                    </div>
                 </footer>
             </div>
         </>

@@ -5,7 +5,7 @@ import AppLogoIcon from '@/components/app-logo-icon';
 export default function Privacy() {
     return (
         <>
-            <Head title="Polityka Prywatności - alxay.ninja" />
+            <Head title="Privacy Policy - alxay.ninja" />
             <div className="relative min-h-screen bg-[#070a10] text-slate-100 overflow-hidden font-sans selection:bg-orange-500 selection:text-black">
                 {/* Glowing decorative background grids */}
                 <div className="absolute inset-0 bg-[linear-gradient(to_right,#0f172a_1px,transparent_1px),linear-gradient(to_bottom,#0f172a_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-35" />
@@ -37,7 +37,7 @@ export default function Privacy() {
                             className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20 px-4 py-2 text-xs font-semibold text-slate-200 transition-all duration-200"
                         >
                             <ArrowLeft className="h-3.5 w-3.5" />
-                            <span>Powrót</span>
+                            <span>Go Back</span>
                         </Link>
                     </div>
                 </header>
@@ -49,10 +49,10 @@ export default function Privacy() {
                             <ShieldCheck className="h-6 w-6" />
                         </div>
                         <h1 className="text-3xl font-extrabold tracking-tight text-white mb-2">
-                            Polityka Prywatności
+                            Privacy Policy
                         </h1>
                         <p className="text-sm text-slate-400">
-                            Ważna od: 26 maja 2026 r. • Serwis alxay.ninja
+                            Effective Date: May 26, 2026 • Website: alxay.ninja
                         </p>
                     </div>
 
@@ -60,10 +60,10 @@ export default function Privacy() {
                         {/* Section 1 */}
                         <section className="space-y-2">
                             <h2 className="text-lg font-bold text-orange-500 border-b border-white/5 pb-1">
-                                1. Administrator danych
+                                1. Data Controller
                             </h2>
                             <p className="text-sm text-slate-300 leading-relaxed">
-                                Administratorem danych osobowych serwisu alxay.ninja jest właściciel strony. W przypadku jakichkolwiek pytań dotyczących prywatności, zachęcamy do kontaktu pod adresem e-mail:{' '}
+                                The data controller of the alxay.ninja website is the owner of the site. If you have any questions regarding privacy, please contact us at:{' '}
                                 <a href="mailto:alxay7@proton.me" className="text-orange-400 hover:underline inline-flex items-center gap-1 font-semibold">
                                     <Mail className="h-3.5 w-3.5 inline" /> alxay7@proton.me
                                 </a>.
@@ -73,87 +73,87 @@ export default function Privacy() {
                         {/* Section 2 */}
                         <section className="space-y-2">
                             <h2 className="text-lg font-bold text-orange-500 border-b border-white/5 pb-1">
-                                2. Jakie dane są zbierane
+                                2. What Data is Collected
                             </h2>
                             <p className="text-sm text-slate-300 leading-relaxed">
-                                Serwis alxay.ninja nie zbiera bezpośrednio żadnych danych osobowych od swoich użytkowników (takich jak imiona, adresy e-mail, numery telefonów czy hasła), ponieważ na stronie nie znajdują się formularze kontaktowe ani system rejestracji użytkowników.
+                                The alxay.ninja website does not directly collect any personal data from its users (such as names, email addresses, phone numbers, or passwords) as there are no contact forms or user registration systems on the site.
                             </p>
                             <p className="text-sm text-slate-300 leading-relaxed mt-2">
-                                W sposób automatyczny i w pełni anonimowy zbieramy jedynie podstawowe statystyki odwiedzin przy użyciu narzędzia analitycznego Umami (np. liczba wizyt, przeglądane podstrony, czas spędzony na stronie, przybliżona lokalizacja na poziomie kraju, typ urządzenia oraz przeglądarki).
+                                We automatically collect only basic anonymous visit statistics using the Umami analytics tool (e.g., number of visits, viewed pages, time spent on the site, approximate country-level location, device type, and browser).
                             </p>
                         </section>
 
                         {/* Section 3 */}
                         <section className="space-y-2">
                             <h2 className="text-lg font-bold text-orange-500 border-b border-white/5 pb-1">
-                                3. Cel przetwarzania danych
+                                3. Purpose of Data Processing
                             </h2>
                             <p className="text-sm text-slate-300 leading-relaxed">
-                                Dane statystyczne przetwarzane są wyłącznie w celu:
+                                Statistical data is processed solely for:
                             </p>
                             <ul className="list-disc list-inside text-sm text-slate-400 space-y-1.5 pl-2">
-                                <li>Monitorowania ruchu na stronie i badania jej popularności.</li>
-                                <li>Optymalizacji działania serwisu i dostosowania go do urządzeń użytkowników.</li>
-                                <li>Zapewnienia stabilności i bezpieczeństwa strony internetowej.</li>
+                                <li>Monitoring website traffic and evaluating its popularity.</li>
+                                <li>Optimizing website performance and tailoring it to users' devices.</li>
+                                <li>Ensuring the stability and security of the website.</li>
                             </ul>
                         </section>
 
                         {/* Section 4 */}
                         <section className="space-y-2">
                             <h2 className="text-lg font-bold text-orange-500 border-b border-white/5 pb-1">
-                                4. Cookies i analityka
+                                4. Cookies and Analytics
                             </h2>
                             <p className="text-sm text-slate-300 leading-relaxed">
-                                Strona korzysta z narzędzia analitycznego <strong>Umami</strong>. Jest to alternatywa dla Google Analytics dbająca o prywatność (privacy-first). Narzędzie to nie śledzi użytkowników na innych stronach ani nie tworzy profili reklamowych.
+                                The website uses the <strong>Umami</strong> analytics tool. This is a privacy-first alternative to Google Analytics. It does not track users across other websites and does not build advertising profiles.
                             </p>
                             <p className="text-sm text-slate-300 leading-relaxed">
-                                Ewentualne pliki cookies (ciasteczka) mogą być wykorzystywane wyłącznie w minimalnym zakresie technicznym do celów analitycznych (np. aby uniknąć wielokrotnego zliczania tego samego użytkownika jako nowego odwiedzającego). Możesz w każdej chwili wyłączyć lub ograniczyć obsługę cookies w ustawieniach swojej przeglądarki internetowej.
+                                Cookies may be used solely to a minimal technical extent for analytical purposes (e.g., to prevent counting the same user twice as a new visitor). You can disable or limit cookie support in your browser settings at any time.
                             </p>
                         </section>
 
                         {/* Section 5 */}
                         <section className="space-y-2">
                             <h2 className="text-lg font-bold text-orange-500 border-b border-white/5 pb-1">
-                                5. Linki afiliacyjne i informacja o prowizji
+                                5. Affiliate Links and Commission Disclosure
                             </h2>
                             <p className="text-sm text-slate-300 leading-relaxed">
-                                Serwis zawiera link afiliacyjny przekierowujący do zewnętrznej strony partnerskiej – platformy wymiany i otwierania skrzynek CS2 (<strong>CSGO-Skins.com</strong>). 
+                                The website contains an affiliate link redirecting to an external partner site – a CS2 case opening and skin exchange platform (<strong>CSGO-Skins.com</strong>). 
                             </p>
                             <p className="text-sm text-slate-300 leading-relaxed">
-                                Kliknięcie w ten link i podjęcie działań na stronie partnerskiej (np. zalogowanie, doładowanie salda) może skutkować naliczeniem prowizji partnerskiej dla właściciela alxay.ninja. Link ten jest oznaczony w serwisie jako <strong>reklama sponsorowana</strong>.
+                                Clicking on this link and taking action on the partner website (e.g., signing in, depositing funds) may result in an affiliate commission for the owner of alxay.ninja. This link is marked on the site as a <strong>sponsored advertisement</strong>.
                             </p>
                         </section>
 
                         {/* Section 6 */}
                         <section className="space-y-2">
                             <h2 className="text-lg font-bold text-orange-500 border-b border-white/5 pb-1">
-                                6. Brak kont użytkowników
+                                6. No User Accounts
                             </h2>
                             <p className="text-sm text-slate-300 leading-relaxed">
-                                Serwis alxay.ninja działa w pełni otwarcie i anonimowo. Wyłączyliśmy oraz usunęliśmy wszelkie opcje rejestracji, logowania i tworzenia profili. Korzystanie z symulatora oraz bazy cen nie wymaga podawania żadnych danych uwierzytelniających.
+                                The alxay.ninja website operates fully open and anonymously. We have disabled and removed all options for registration, login, and user profile creation. Using the simulator and price database does not require providing any credentials.
                             </p>
                         </section>
 
                         {/* Section 7 */}
                         <section className="space-y-2">
                             <h2 className="text-lg font-bold text-orange-500 border-b border-white/5 pb-1">
-                                7. Prawa użytkownika (RODO)
+                                7. User Rights (GDPR)
                             </h2>
                             <p className="text-sm text-slate-300 leading-relaxed">
-                                Zgodnie z Ogólnym Rozporządzeniem o Ochronie Danych (RODO), przysługują Ci prawa dostępu do swoich danych, ich sprostowania, usunięcia lub ograniczenia przetwarzania. 
+                                According to the General Data Protection Regulation (GDPR), you have the right to access, rectify, erase, or restrict the processing of your data.
                             </p>
                             <p className="text-sm text-slate-300 leading-relaxed">
-                                Ponieważ nasz serwis nie gromadzi danych umożliwiających identyfikację konkretnej osoby fizycznej, w większości przypadków technicznie niemożliwe jest powiązanie anonimowych statystyk wizyt z konkretnym użytkownikiem. Mimo to, jeśli masz wątpliwości, masz prawo wnieść skargę do organu nadzorczego (Prezesa Urzędu Ochrony Danych Osobowych w Polsce).
+                                Since our website does not collect data allowing the identification of a specific natural person, it is technically impossible to associate anonymous visit statistics with a specific user. Nevertheless, if you have concerns, you have the right to lodge a complaint with a supervisory authority (e.g., the President of the Personal Data Protection Office in Poland or your local GDPR authority).
                             </p>
                         </section>
 
                         {/* Section 8 */}
                         <section className="space-y-2">
                             <h2 className="text-lg font-bold text-orange-500 border-b border-white/5 pb-1">
-                                8. Kontakt
+                                8. Contact
                             </h2>
                             <p className="text-sm text-slate-300 leading-relaxed">
-                                Wszelkie zapytania, skargi oraz wnioski dotyczące prywatności prosimy kierować na adres:{' '}
+                                Please send any inquiries, complaints, or requests regarding privacy to:{' '}
                                 <a href="mailto:alxay7@proton.me" className="text-orange-400 hover:underline font-semibold">
                                     alxay7@proton.me
                                 </a>.
@@ -165,7 +165,7 @@ export default function Privacy() {
                 {/* Footer */}
                 <footer className="relative z-10 border-t border-white/5 bg-[#090d16]/30 py-8 text-center text-xs text-slate-500">
                     <p className="max-w-md mx-auto leading-relaxed">
-                        &copy; 2026 alxay.ninja. Wszystkie prawa zastrzeżone.
+                        &copy; 2026 alxay.ninja. All rights reserved.
                     </p>
                 </footer>
             </div>
