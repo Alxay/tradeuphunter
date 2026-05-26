@@ -2,6 +2,7 @@ import axios from 'axios';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Skin, Rarity, ApiData, Collection } from '../../types/skin';
 import { X, Search, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Props {
     apiData: ApiData;
@@ -563,6 +564,10 @@ export default function SelectSkin({
                                         <div
                                             key={skin.id}
                                             onClick={() => {
+                                                if (skin.rarity?.name === 'Covert' || skin.rarity_id === 1) {
+                                                    toast.error('Covert skins cannot be traded up.');
+                                                    return;
+                                                }
                                                 onSelect({
                                                     ...skin,
                                                     condition: conditionFilter,

@@ -10,7 +10,7 @@ class DataController extends Controller
 {
     public function getSkins(Request $request){
         $validated = $request->validate([
-            'page' => 'nullable|string|min:1',
+            'page' => 'nullable|integer|min:1',
             'collection' => 'nullable|string|min:1',
             'rarity' => 'nullable|string|in:1,2,3,4,5,6',
             'condition' => 'nullable|string|in:Factory New,Minimal Wear,Field-Tested,Well-Worn,Battle-Scarred',
@@ -35,7 +35,7 @@ class DataController extends Controller
             'avgInputFloat' => 'required|numeric|min:0|max:1',
             'rarity' => 'required|integer|min:1|max:6',
             'statTrak' => 'nullable',
-            'collections' => 'required|array',
+            'collections' => 'required|array|size:10',
             'collections.*' => 'integer|min:1',
         ]);
 

@@ -11,7 +11,7 @@ class DataManager extends Model
 {
     public function getSkins($page = 1, $perPage = 40, $condition = "Minimal Wear", $collection = null, $rarity = null, $statTrak = false, $search = null){
         $statTrak = filter_var($statTrak, FILTER_VALIDATE_BOOLEAN);
-        $result = Skin::with(['rarity'])
+        $result = Skin::with(['rarity', 'prices'])
             ->when($collection, function ($query) use ($collection) {
                 return $query->where('collection_id', $collection);
             })
@@ -39,7 +39,7 @@ class DataManager extends Model
         $result->getCollection()->transform(function ($skin) use ($condition, $statTrak, $page) {
             if ($page == 1) {
                 // Load all prices for this skin in the first batch (StatTrak and normal)
-                $prices = $skin->prices()->get();
+                $prices = $skin->prices;
                 $stPrices = $prices->where('is_stattrak', true)->keyBy('condition');
                 $nonStPrices = $prices->where('is_stattrak', false)->keyBy('condition');
 
@@ -56,9 +56,8 @@ class DataManager extends Model
                 $skin->stPriceFN = $stPrices->get("Factory New") ?->price_30d ?? $stPrices->get("Factory New") ?->price_90d;
             } else {
                 // Subsequent pages load only what is needed based on the filter
-                $prices = $skin->prices()
+                $prices = $skin->prices
                     ->where('is_stattrak', $statTrak)
-                    ->get()
                     ->keyBy('condition');
 
                 $skin->priceBS = $prices->get("Battle-Scarred") ?->price_30d ?? $prices->get("Battle-Scarred") ?->price_90d;
@@ -88,7 +87,9 @@ class DataManager extends Model
         $inputCollectionCounts = array_count_values($collections);
         $totalInputSkins = array_sum($inputCollectionCounts) ?: 1;
 
-        $outputSkins = Skin::with(['rarity'])
+        $outputSkins = Skin::with(['rarity', 'prices' => function ($query) use ($statTrak) {
+                $query->where('is_stattrak', $statTrak);
+            }])
             ->where('rarity_id', $outputRarityId)
             ->whereIn('collection_id', $collections)
             ->get();
@@ -98,10 +99,7 @@ class DataManager extends Model
             ->map(fn ($skins) => $skins->count());
 
         $outputSkins = $outputSkins->map(function ($skin) use ($statTrak, $inputCollectionCounts, $outputCountsByCollection, $totalInputSkins) {
-            $prices = $skin->prices()
-                ->where('is_stattrak', $statTrak)
-                ->get()
-                ->keyBy('condition');
+            $prices = $skin->prices->keyBy('condition');
             
             $skin->priceBS = $prices->get("Battle-Scarred") ?->price_30d ?? $prices->get("Battle-Scarred") ?->price_90d;
             $skin->priceWW = $prices->get("Well-Worn") ?->price_30d ?? $prices->get("Well-Worn") ?->price_90d;
