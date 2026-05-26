@@ -16,4 +16,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 
 
+Route::get('skins', [TradeUpController::class, 'skinsList'])->name('skins.index');
+Route::get('tradeups', [TradeUpController::class, 'tradeUps'])->name('tradeups.index');
+
 require __DIR__.'/settings.php';

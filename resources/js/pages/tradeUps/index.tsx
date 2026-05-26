@@ -8,6 +8,7 @@ import StatsBar from './statsBar';
 import SelectSkin from './selectSkin';
 import { Rarity, Skin, ApiData, Collection } from '../../types/skin';
 
+
 interface Props {
     apiData: ApiData;
     collections: Collection[];
