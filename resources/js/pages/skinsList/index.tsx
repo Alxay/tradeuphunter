@@ -9,6 +9,11 @@ interface Rarity {
     color_hex: string;
 }
 
+interface Weapon {
+    id: number;
+    name: string;
+}
+
 interface Skin {
     id: number;
     name: string;
@@ -16,6 +21,7 @@ interface Skin {
     min_float: number;
     max_float: number;
     rarity: Rarity;
+    weapon?: Weapon;
     priceBS?: number;
     priceWW?: number;
     priceFT?: number;
@@ -517,6 +523,27 @@ export default function Index({ apiData, collections, rarities }: Props) {
                                                         ST™
                                                     </div>
                                                 )}
+                                                
+                                                <a
+                                                    href={`https://steamcommunity.com/market/listings/730/${encodeURIComponent(
+                                                        (skin.statTrak === true || String(skin.statTrak) === '1' ? 'StatTrak™ ' : '') + 
+                                                        (skin.weapon?.name ? skin.weapon.name + ' | ' : '') + 
+                                                        skin.name + 
+                                                        ` (${conditionFilter})`
+                                                    )}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="absolute top-3 right-3 z-10 flex h-6 w-6 items-center justify-center rounded-lg bg-black/60 border border-white/10 p-1 opacity-0 group-hover:opacity-100 hover:bg-black/90 hover:border-white/20 transition-all duration-200"
+                                                    title="View on Steam Market"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    <img
+                                                        src="https://store.steampowered.com/favicon.ico"
+                                                        alt="Steam"
+                                                        className="h-3.5 w-3.5"
+                                                    />
+                                                </a>
+
                                                 <img
                                                     src={skin.image_url}
                                                     alt={skin.name}
@@ -527,8 +554,8 @@ export default function Index({ apiData, collections, rarities }: Props) {
 
                                             {/* Details */}
                                             <div className="space-y-1.5 p-4 border-t border-white/5">
-                                                <h4 className="truncate text-sm font-bold text-slate-100 group-hover:text-white transition-colors" title={skin.name}>
-                                                    {skin.name}
+                                                <h4 className="truncate text-sm font-bold text-slate-100 group-hover:text-white transition-colors" title={`${skin.weapon?.name ? skin.weapon.name + ' | ' : ''}${skin.name}`}>
+                                                    {skin.weapon?.name ? skin.weapon.name + ' | ' : ''}{skin.name}
                                                 </h4>
                                                 
                                                 <p

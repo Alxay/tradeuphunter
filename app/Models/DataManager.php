@@ -11,7 +11,7 @@ class DataManager extends Model
 {
     public function getSkins($page = 1, $perPage = 40, $condition = "Minimal Wear", $collection = null, $rarity = null, $statTrak = false, $search = null){
         $statTrak = filter_var($statTrak, FILTER_VALIDATE_BOOLEAN);
-        $result = Skin::with(['rarity', 'prices'])
+        $result = Skin::with(['rarity', 'prices', 'weapon'])
             ->when($collection, function ($query) use ($collection) {
                 return $query->where('collection_id', $collection);
             })
@@ -87,7 +87,7 @@ class DataManager extends Model
         $inputCollectionCounts = array_count_values($collections);
         $totalInputSkins = array_sum($inputCollectionCounts) ?: 1;
 
-        $outputSkins = Skin::with(['rarity', 'prices' => function ($query) use ($statTrak) {
+        $outputSkins = Skin::with(['rarity', 'weapon', 'prices' => function ($query) use ($statTrak) {
                 $query->where('is_stattrak', $statTrak);
             }])
             ->where('rarity_id', $outputRarityId)

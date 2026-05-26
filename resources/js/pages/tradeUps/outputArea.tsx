@@ -83,9 +83,32 @@ export default function OutputArea({
 
                                 {/* Skin info */}
                                 <div className="min-w-0 flex-1">
-                                    <p className="truncate text-sm font-bold text-slate-100" title={skin.name}>
-                                        {skin.name}
-                                    </p>
+                                    <div className="flex items-center gap-1.5 min-w-0">
+                                        <p className="truncate text-sm font-bold text-slate-100" title={`${skin.weapon?.name ? skin.weapon.name + ' | ' : ''}${skin.name}`}>
+                                            {skin.weapon?.name ? skin.weapon.name + ' | ' : ''}{skin.name}
+                                        </p>
+                                        {condition && condition !== 'N/A' && (
+                                            <a
+                                                href={`https://steamcommunity.com/market/listings/730/${encodeURIComponent(
+                                                    (skin.statTrak === true || String(skin.statTrak) === '1' ? 'StatTrak™ ' : '') + 
+                                                    (skin.weapon?.name ? skin.weapon.name + ' | ' : '') + 
+                                                    skin.name + 
+                                                    ` (${condition})`
+                                                )}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="shrink-0 flex h-4.5 w-4.5 items-center justify-center rounded bg-slate-800 border border-white/10 p-0.5 hover:bg-slate-700 hover:border-white/20 transition-all duration-200"
+                                                title="View on Steam Market"
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                <img
+                                                    src="https://store.steampowered.com/favicon.ico"
+                                                    alt="Steam"
+                                                    className="h-2.5 w-2.5"
+                                                />
+                                            </a>
+                                        )}
+                                    </div>
                                     <p
                                         className="text-[10px] font-semibold uppercase tracking-wider"
                                         style={{ color: rarityColor }}

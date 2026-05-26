@@ -133,6 +133,29 @@ export default function SkinSlot({
                         StatTrak™
                     </div>
                 )}
+                
+                {condition && (
+                    <a
+                        href={`https://steamcommunity.com/market/listings/730/${encodeURIComponent(
+                            (skin.statTrak === true || String(skin.statTrak) === '1' ? 'StatTrak™ ' : '') + 
+                            (skin.weapon?.name ? skin.weapon.name + ' | ' : '') + 
+                            skin.name + 
+                            ` (${condition})`
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="absolute left-2 bottom-2 z-10 flex h-5 w-5 items-center justify-center rounded bg-black/60 border border-white/10 p-0.5 opacity-0 group-hover:opacity-100 hover:bg-black/90 hover:border-white/20 transition-all duration-200"
+                        title="View on Steam Market"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <img
+                            src="https://store.steampowered.com/favicon.ico"
+                            alt="Steam"
+                            className="h-3 w-3"
+                        />
+                    </a>
+                )}
+
                 <img
                     src={skin.image_url}
                     alt={skin.name}
@@ -142,8 +165,8 @@ export default function SkinSlot({
 
             {/* Info section */}
             <div className="space-y-1 border-t border-white/5 p-2">
-                <p className="truncate text-xs font-semibold text-gray-200">
-                    {skin.name}
+                <p className="truncate text-xs font-semibold text-gray-200" title={`${skin.weapon?.name ? skin.weapon.name + ' | ' : ''}${skin.name}`}>
+                    {skin.weapon?.name ? skin.weapon.name + ' | ' : ''}{skin.name}
                 </p>
 
                 {/* Float input */}

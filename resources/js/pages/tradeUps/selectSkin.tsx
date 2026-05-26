@@ -592,6 +592,27 @@ export default function SelectSkin({
                                                         ST™
                                                     </div>
                                                 )}
+                                                
+                                                <a
+                                                    href={`https://steamcommunity.com/market/listings/730/${encodeURIComponent(
+                                                        (skin.statTrak === true || String(skin.statTrak) === '1' ? 'StatTrak™ ' : '') + 
+                                                        (skin.weapon?.name ? skin.weapon.name + ' | ' : '') + 
+                                                        skin.name + 
+                                                        ` (${conditionFilter})`
+                                                    )}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="absolute top-2 right-2 z-10 flex h-5 w-5 items-center justify-center rounded bg-black/60 border border-white/10 p-0.5 opacity-0 group-hover:opacity-100 hover:bg-black/90 hover:border-white/20 transition-all duration-200"
+                                                    title="View on Steam Market"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    <img
+                                                        src="https://store.steampowered.com/favicon.ico"
+                                                        alt="Steam"
+                                                        className="h-3 w-3"
+                                                    />
+                                                </a>
+
                                                 <img
                                                     src={skin.image_url}
                                                     alt={skin.name}
@@ -599,8 +620,8 @@ export default function SelectSkin({
                                                 />
                                             </div>
                                             <div className="space-y-1 p-3">
-                                                <h4 className="truncate text-sm font-semibold text-gray-200">
-                                                    {skin.name}
+                                                <h4 className="truncate text-sm font-semibold text-gray-200" title={`${skin.weapon?.name ? skin.weapon.name + ' | ' : ''}${skin.name}`}>
+                                                    {skin.weapon?.name ? skin.weapon.name + ' | ' : ''}{skin.name}
                                                 </h4>
                                                 <p
                                                     className="text-xs font-medium"

@@ -11,6 +11,13 @@ export interface Collection {
     image_url: string;
 }
 
+export interface Weapon {
+    id: number;
+    name: string;
+    api_id: string;
+    weapon_id: number;
+}
+
 export interface Skin {
     id: number;
     name: string;
@@ -18,6 +25,7 @@ export interface Skin {
     min_float: number;
     max_float: number;
     rarity: Rarity;
+    weapon?: Weapon;
     collection_id: number;
     priceBS?: number;
     priceWW?: number;
