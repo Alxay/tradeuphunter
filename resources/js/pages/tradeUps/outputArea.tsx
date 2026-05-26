@@ -129,6 +129,10 @@ export default function OutputArea({
                                             </span>
                                         )}
                                     </div>
+                                    {/* Float range */}
+                                    <div className="mt-0.5 text-[9px] font-mono text-slate-600">
+                                        Range: {skin.min_float.toFixed(2)} – {skin.max_float.toFixed(2)}
+                                    </div>
                                 </div>
 
                                 {/* Price + extras */}

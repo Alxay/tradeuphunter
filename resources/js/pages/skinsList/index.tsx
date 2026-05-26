@@ -269,6 +269,28 @@ export default function Index({ apiData, collections, rarities }: Props) {
                     </div>
                 </div>
 
+                {/* Sponsored Banner */}
+                <div className="mb-6">
+                    <a
+                        href="https://csgo-skins.com/?ref=ALXAY"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group flex flex-col md:flex-row items-center justify-between gap-4 rounded-2xl border border-orange-500/10 bg-orange-950/5 p-4 hover:border-orange-500/20 hover:bg-orange-950/10 transition-all duration-300 shadow-[0_0_15px_rgba(249,115,22,0.01)]"
+                    >
+                        <div className="flex items-center gap-3">
+                            <span className="text-[9px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded border border-white/5 uppercase tracking-wider font-extrabold shrink-0">
+                                Sponsored
+                            </span>
+                            <p className="text-xs text-slate-300 leading-normal">
+                                Want to upgrade your CS2 inventory? Open cases and withdraw instantly at <span className="font-bold text-orange-400 hover:underline">CSGO-Skins.com</span>. Use referral code <span className="font-bold text-orange-400">ALXAY</span> for an exclusive bonus!
+                            </p>
+                        </div>
+                        <div className="shrink-0 rounded-xl bg-orange-500 group-hover:bg-orange-400 px-4 py-2 text-xs font-bold text-black transition-colors">
+                            Claim Bonus
+                        </div>
+                    </a>
+                </div>
+
                 {/* ── Search & Filters ── */}
                 <div className="space-y-4 border border-white/5 bg-slate-900/10 rounded-2xl p-4 mb-6">
                     {/* Search Input */}

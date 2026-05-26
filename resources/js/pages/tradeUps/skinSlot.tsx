@@ -49,7 +49,7 @@ export default function SkinSlot({
     useEffect(() => {
         setLocalFloat(skin?.float != null ? String(skin.float) : '');
         setInvalidFloat(false);
-    }, [skin?.id]);
+    }, [skin?.id, skin?.float]);
 
     // --- Empty slot ---
     if (!skin) {
