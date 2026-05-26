@@ -14,7 +14,7 @@ class DataController extends Controller
             'collection' => 'nullable|string|min:1',
             'rarity' => 'nullable|string|in:1,2,3,4,5,6',
             'condition' => 'nullable|string|in:Factory New,Minimal Wear,Field-Tested,Well-Worn,Battle-Scarred',
-            'statTrak' => 'nullable|boolean',
+            'statTrak' => 'nullable',
             'search' => 'nullable|string|max:100',
         ]);
 
@@ -22,7 +22,7 @@ class DataController extends Controller
         $collection = $validated['collection'] ?? null;
         $rarity = $validated['rarity'] ?? null;
         $condition = $validated['condition'] ?? 'Minimal Wear';
-        $statTrak = $validated['statTrak'] ?? false;
+        $statTrak = isset($validated['statTrak']) ? filter_var($validated['statTrak'], FILTER_VALIDATE_BOOLEAN) : false;
         $search = $validated['search'] ?? null;
         $perPage = 40;
 
@@ -34,7 +34,7 @@ class DataController extends Controller
         $validated = $request->validate([
             'avgInputFloat' => 'required|numeric|min:0|max:1',
             'rarity' => 'required|integer|min:1|max:6',
-            'statTrak' => 'boolean',
+            'statTrak' => 'nullable',
             'collections' => 'required|array',
             'collections.*' => 'integer|min:1',
         ]);
@@ -42,7 +42,7 @@ class DataController extends Controller
         $avgInputFloat = $validated['avgInputFloat'];
         $rarity = $validated['rarity'];
         $collections = $validated['collections'];
-        $statTrak = $validated['statTrak'] ?? false;
+        $statTrak = isset($validated['statTrak']) ? filter_var($validated['statTrak'], FILTER_VALIDATE_BOOLEAN) : false;
         
         $dataManager = new DataManager();
         return $dataManager->calculateTradeUp($avgInputFloat, $rarity, $collections, $statTrak);

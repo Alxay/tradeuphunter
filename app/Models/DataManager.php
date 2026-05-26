@@ -10,6 +10,7 @@ use App\Models\Rarity;
 class DataManager extends Model
 {
     public function getSkins($page = 1, $perPage = 40, $condition = "Minimal Wear", $collection = null, $rarity = null, $statTrak = false, $search = null){
+        $statTrak = filter_var($statTrak, FILTER_VALIDATE_BOOLEAN);
         $result = Skin::with(['rarity'])
             ->when($collection, function ($query) use ($collection) {
                 return $query->where('collection_id', $collection);
@@ -35,18 +36,37 @@ class DataManager extends Model
             ->orderBy('rarity_id', 'asc')
             ->paginate($perPage, ['*'], 'page', $page);
         //pobieramy cene dla kazdej z kondycji
-        $result->getCollection()->transform(function ($skin) use ($condition, $statTrak) {
-            $prices = $skin->prices()
-                ->where('is_stattrak', $statTrak)
-                ->get()
-                ->keyBy('condition');
-            //jezeli cena 30d jest nul bierzemy z 90d
-            $skin->priceBS = $prices->get("Battle-Scarred") ?->price_30d ?? $prices->get("Battle-Scarred") ?->price_90d;
-            $skin->priceWW = $prices->get("Well-Worn") ?->price_30d ?? $prices->get("Well-Worn") ?->price_90d;
-            $skin->priceFT = $prices->get("Field-Tested") ?->price_30d ?? $prices->get("Field-Tested") ?->price_90d;
-            $skin->priceMW = $prices->get("Minimal Wear") ?->price_30d ?? $prices->get("Minimal Wear") ?->price_90d;
-            $skin->priceFN = $prices->get("Factory New") ?->price_30d ?? $prices->get("Factory New") ?->price_90d;
-            //$skin->price = $price ? $price->price_30d : null;
+        $result->getCollection()->transform(function ($skin) use ($condition, $statTrak, $page) {
+            if ($page == 1) {
+                // Load all prices for this skin in the first batch (StatTrak and normal)
+                $prices = $skin->prices()->get();
+                $stPrices = $prices->where('is_stattrak', true)->keyBy('condition');
+                $nonStPrices = $prices->where('is_stattrak', false)->keyBy('condition');
+
+                $skin->priceBS = $nonStPrices->get("Battle-Scarred") ?->price_30d ?? $nonStPrices->get("Battle-Scarred") ?->price_90d;
+                $skin->priceWW = $nonStPrices->get("Well-Worn") ?->price_30d ?? $nonStPrices->get("Well-Worn") ?->price_90d;
+                $skin->priceFT = $nonStPrices->get("Field-Tested") ?->price_30d ?? $nonStPrices->get("Field-Tested") ?->price_90d;
+                $skin->priceMW = $nonStPrices->get("Minimal Wear") ?->price_30d ?? $nonStPrices->get("Minimal Wear") ?->price_90d;
+                $skin->priceFN = $nonStPrices->get("Factory New") ?->price_30d ?? $nonStPrices->get("Factory New") ?->price_90d;
+
+                $skin->stPriceBS = $stPrices->get("Battle-Scarred") ?->price_30d ?? $stPrices->get("Battle-Scarred") ?->price_90d;
+                $skin->stPriceWW = $stPrices->get("Well-Worn") ?->price_30d ?? $stPrices->get("Well-Worn") ?->price_90d;
+                $skin->stPriceFT = $stPrices->get("Field-Tested") ?->price_30d ?? $stPrices->get("Field-Tested") ?->price_90d;
+                $skin->stPriceMW = $stPrices->get("Minimal Wear") ?->price_30d ?? $stPrices->get("Minimal Wear") ?->price_90d;
+                $skin->stPriceFN = $stPrices->get("Factory New") ?->price_30d ?? $stPrices->get("Factory New") ?->price_90d;
+            } else {
+                // Subsequent pages load only what is needed based on the filter
+                $prices = $skin->prices()
+                    ->where('is_stattrak', $statTrak)
+                    ->get()
+                    ->keyBy('condition');
+
+                $skin->priceBS = $prices->get("Battle-Scarred") ?->price_30d ?? $prices->get("Battle-Scarred") ?->price_90d;
+                $skin->priceWW = $prices->get("Well-Worn") ?->price_30d ?? $prices->get("Well-Worn") ?->price_90d;
+                $skin->priceFT = $prices->get("Field-Tested") ?->price_30d ?? $prices->get("Field-Tested") ?->price_90d;
+                $skin->priceMW = $prices->get("Minimal Wear") ?->price_30d ?? $prices->get("Minimal Wear") ?->price_90d;
+                $skin->priceFN = $prices->get("Factory New") ?->price_30d ?? $prices->get("Factory New") ?->price_90d;
+            }
             $skin->statTrak = $statTrak;
             return $skin;
         });
@@ -63,6 +83,7 @@ class DataManager extends Model
     }
     public function calculateTradeUp($avgInputFloat, $rarity, $collections, $statTrak = false)
     {
+        $statTrak = filter_var($statTrak, FILTER_VALIDATE_BOOLEAN);
         $outputRarityId = $rarity -1;
         $inputCollectionCounts = array_count_values($collections);
         $totalInputSkins = array_sum($inputCollectionCounts) ?: 1;

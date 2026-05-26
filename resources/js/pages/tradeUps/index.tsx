@@ -2,6 +2,7 @@ import { Head } from '@inertiajs/react';
 import { dashboard } from '@/routes';
 import axios from 'axios';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Sparkles } from 'lucide-react';
 import InputArea from './inputArea';
 import OutputArea from './outputArea';
 import StatsBar from './statsBar';
@@ -285,7 +286,20 @@ export default function Index({ apiData, collections, rarities }: Props) {
     return (
         <>
             <Head title="Trade-Up Simulator" />
-            <div className="min-h-[80vh] bg-[#0a0d14] p-6 text-white">
+            <div className="min-h-[90vh] bg-background p-6 text-white">
+                {/* ── Page Header ── */}
+                <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-5">
+                    <div>
+                        <h1 className="text-2xl font-extrabold tracking-tight text-white flex items-center gap-2">
+                            <Sparkles className="h-6 w-6 text-orange-500 fill-current" />
+                            <span>Trade-Up Contract Simulator</span>
+                        </h1>
+                        <p className="text-xs text-slate-400 mt-1">
+                            Simulate CS2 / CS:GO contract outcomes, float math, and expected profitability.
+                        </p>
+                    </div>
+                </div>
+
                 <StatsBar
                     EV={stats.ev}
                     inputCost={stats.inputCost}

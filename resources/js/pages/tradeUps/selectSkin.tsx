@@ -39,17 +39,18 @@ const CONDITION_SHORT: Record<string, string> = {
 };
 
 function getPriceByCondition(skin: Skin, condition: string): number {
+    const isSt = skin.statTrak === true || String(skin.statTrak) === '1';
     switch (condition) {
         case 'Battle-Scarred':
-            return skin.priceBS ?? 0;
+            return (isSt ? (skin.stPriceBS ?? skin.priceBS) : skin.priceBS) ?? 0;
         case 'Well-Worn':
-            return skin.priceWW ?? 0;
+            return (isSt ? (skin.stPriceWW ?? skin.priceWW) : skin.priceWW) ?? 0;
         case 'Field-Tested':
-            return skin.priceFT ?? 0;
+            return (isSt ? (skin.stPriceFT ?? skin.priceFT) : skin.priceFT) ?? 0;
         case 'Minimal Wear':
-            return skin.priceMW ?? 0;
+            return (isSt ? (skin.stPriceMW ?? skin.priceMW) : skin.priceMW) ?? 0;
         case 'Factory New':
-            return skin.priceFN ?? 0;
+            return (isSt ? (skin.stPriceFN ?? skin.priceFN) : skin.priceFN) ?? 0;
         default:
             return 0;
     }
@@ -124,8 +125,41 @@ export default function SelectSkin({
         [collectionFilter, rarityFilter, statTrakFilter, searchQuery],
     );
 
+    const prevFiltersRef = useRef({
+        collection: collectionFilter,
+        rarity: rarityFilter,
+        search: searchQuery,
+        statTrak: statTrakFilter,
+    });
+
     // ---- Fetch skins when server-relevant filters change ----
     useEffect(() => {
+        const onlyStatTrakChanged =
+            collectionFilter === prevFiltersRef.current.collection &&
+            rarityFilter === prevFiltersRef.current.rarity &&
+            searchQuery === prevFiltersRef.current.search &&
+            statTrakFilter !== prevFiltersRef.current.statTrak;
+
+        prevFiltersRef.current = {
+            collection: collectionFilter,
+            rarity: rarityFilter,
+            search: searchQuery,
+            statTrak: statTrakFilter,
+        };
+
+        if (onlyStatTrakChanged && skins.length > 0) {
+            // Instant local toggle and truncate back to page 1 (first 40 items)
+            const isSt = statTrakFilter === '1';
+            setSkins((prev) =>
+                prev.slice(0, 40).map((skin) => ({
+                    ...skin,
+                    statTrak: isSt,
+                })),
+            );
+            setCurrentPage(1);
+            return;
+        }
+
         setIsLoading(true);
         isLoadingMoreRef.current = true;
         setSkins([]);
@@ -199,6 +233,17 @@ export default function SelectSkin({
         [],
     );
 
+    useEffect(() => {
+        if (visible) {
+            if (contractStatTrak !== null) {
+                setStatTrakFilter(contractStatTrak ? '1' : '0');
+            }
+            if (contractRarity !== null) {
+                setRarityFilter(String(contractRarity.id));
+            }
+        }
+    }, [visible, contractStatTrak, contractRarity]);
+
     // ---- Don't render when hidden ----
     if (!visible) return null;
 
@@ -237,7 +282,7 @@ export default function SelectSkin({
                             type="text"
                             placeholder="Search skins…"
                             value={searchInput}
-                            className="w-full rounded-xl border border-white/10 bg-[#161b22] py-2.5 pr-4 pl-10 text-sm text-white placeholder-gray-500 transition-colors outline-none focus:border-cyan-500/50 focus:bg-[#1c2128]"
+                            className="w-full rounded-xl border border-white/10 bg-[#161b22] py-2.5 pr-4 pl-10 text-sm text-white placeholder-gray-500 transition-colors outline-none focus:border-orange-500/50 focus:bg-[#1c2128]"
                             onChange={(e) => handleSearchInput(e.target.value)}
                         />
                     </div>
@@ -247,7 +292,7 @@ export default function SelectSkin({
                         {/* Collection Custom Dropdown */}
                         <div className="relative z-40" ref={collectionRef}>
                             <button
-                                className="flex w-56 items-center justify-between gap-2 rounded-lg border border-white/10 bg-[#161b22] px-3 py-2 text-sm text-gray-300 transition-colors outline-none hover:bg-white/5 focus:border-cyan-500/50"
+                                className="flex w-56 items-center justify-between gap-2 rounded-lg border border-white/10 bg-[#161b22] px-3 py-2 text-sm text-gray-300 transition-colors outline-none hover:bg-white/5 focus:border-orange-500/50"
                                 onClick={() =>
                                     setIsCollectionOpen(!isCollectionOpen)
                                 }
@@ -331,7 +376,7 @@ export default function SelectSkin({
                         {/* Rarity Custom Dropdown */}
                         <div className="relative z-30" ref={rarityRef}>
                             <button
-                                className={`flex w-48 items-center justify-between gap-2 rounded-lg border border-white/10 bg-[#161b22] px-3 py-2 text-sm transition-colors outline-none hover:bg-white/5 focus:border-cyan-500/50 ${contractRarity ? 'cursor-not-allowed opacity-50' : ''}`}
+                                className={`flex w-48 items-center justify-between gap-2 rounded-lg border border-white/10 bg-[#161b22] px-3 py-2 text-sm transition-colors outline-none hover:bg-white/5 focus:border-orange-500/50 ${contractRarity ? 'cursor-not-allowed opacity-50' : ''}`}
                                 onClick={() =>
                                     !contractRarity &&
                                     setIsRarityOpen(!isRarityOpen)
@@ -463,7 +508,7 @@ export default function SelectSkin({
                                     key={cond}
                                     className={`rounded-md px-2.5 py-1.5 text-xs font-medium transition-all ${
                                         conditionFilter === cond
-                                            ? 'bg-cyan-500/20 text-cyan-400 shadow-sm'
+                                            ? 'bg-orange-500/20 text-orange-500 shadow-sm'
                                             : 'text-gray-500 hover:bg-white/5 hover:text-gray-300'
                                     }`}
                                     onClick={() => setConditionFilter(cond)}
@@ -592,7 +637,7 @@ export default function SelectSkin({
                                     ref={loadMoreRef}
                                     className="flex items-center justify-center py-6"
                                 >
-                                    <Loader2 className="h-5 w-5 animate-spin text-cyan-400" />
+                                    <Loader2 className="h-5 w-5 animate-spin text-orange-500" />
                                     <span className="ml-2 text-sm text-gray-500">
                                         Loading more…
                                     </span>

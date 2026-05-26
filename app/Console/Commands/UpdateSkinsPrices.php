@@ -6,49 +6,73 @@ use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\DB;
 use App\Models\Skin;
 use App\Models\Price;
 
 #[Signature('app:update-skins-prices')]
-#[Description('Update skins prices from an external API')]
+#[Description('Update skins prices from an external API using memory-efficient streaming')]
 class UpdateSkinsPrices extends Command
 {
     public function handle()
     {   
-        ini_set('memory_limit', '512M');
+        // Set higher execution time, but keep low memory limit to prove efficiency
+        ini_set('memory_limit', '128M');
+        ini_set('max_execution_time', '300');
+
         $this->info('Connecting to external API to fetch skins prices...');
         
+        $tempPath = storage_path('app/prices.json');
         
-        $response = Http::timeout(60)->get('https://api.steamapis.com/market/items/730?api_key=' . env('PRICE_API_KEY'));
+        // Ensure parent directory exists
+        if (!is_dir(dirname($tempPath))) {
+            mkdir(dirname($tempPath), 0755, true);
+        }
 
-        if ($response->failed()) {
-            $this->error('Error fetching skins prices: ' . $response->status());
+        $this->info("Streaming API response directly to disk: {$tempPath}");
+        
+        $response = Http::timeout(180)->sink($tempPath)->get('https://api.steamapis.com/market/items/730?api_key=' . env('PRICE_API_KEY'));
+
+        if ($response->failed() || !file_exists($tempPath) || filesize($tempPath) === 0) {
+            $this->error('Error fetching skins prices: ' . ($response->status() ?? 'No response file'));
             return;
         }
 
-        $json = $response->json();
-        $skinsData = $json['data'] ?? [];
-        $this->info('Data fetched successfully. Updating database...');
+        $this->info('Data downloaded successfully. Preloading skins from database...');
 
-        $bar = $this->output->createProgressBar(count($skinsData));
-        $bar->start();
+        // Preload all database skins to avoid N+1 queries inside the loop
+        DB::connection()->disableQueryLog();
+        $skinsMap = [];
+        Skin::with('weapon')->chunk(200, function ($skins) use (&$skinsMap) {
+            foreach ($skins as $skin) {
+                if ($skin->weapon) {
+                    $key = trim($skin->weapon->name) . ' | ' . trim($skin->name);
+                    $skinsMap[$key] = $skin->id;
+                }
+            }
+        });
 
-        foreach ($skinsData as $skinData) {
+        $this->info(count($skinsMap) . ' skins pre-cached in memory. Beginning database sync...');
+
+        $count = 0;
+        $updatedCount = 0;
+
+        foreach ($this->streamJsonItems($tempPath) as $skinData) {
+            $count++;
+            
             $marketName = $skinData['market_name'] ?? null;
 
             if (!$marketName) {
-                $bar->advance();
                 continue;
             }
 
-            // 1. FILTRY
-            // Wywalamy wszystko co nie ma " | " (skrzynki, klucze itp.)
+            // 1. FILTERS
+            // Exclude everything that is not a skin weapon (no " | ")
             if (!str_contains($marketName, ' | ')) {
-                $bar->advance();
                 continue;
             }
 
-            // Odrzucamy przedmioty, które NIE są skinami broni
+            // Reject items that are not weapon skins
             $exclude = ['Sticker', 'Music Kit', 'Graffiti', 'Patch', 'Agent', 'Gloves', '★', 'Souvenir', 'Collectible'];
             $shouldSkip = false;
             foreach ($exclude as $badWord) {
@@ -58,13 +82,11 @@ class UpdateSkinsPrices extends Command
                 }
             }
 
-        
             if ($shouldSkip || !str_contains($marketName, '(')) {
-                $bar->advance();
                 continue;
             }
 
-            // 2. PARSOWANIE
+            // 2. PARSING
             $isStatTrak = str_contains($marketName, 'StatTrak™');
             $tempName = str_replace('StatTrak™ ', '', $marketName);
 
@@ -72,25 +94,18 @@ class UpdateSkinsPrices extends Command
             $condition = $matches[1] ?? null;
 
             $cleanName = trim(str_replace("($condition)", "", $tempName));
-            $parts = explode(' | ', $cleanName);
-            
-            $weaponName = $parts[0] ?? null;
-            $skinName = $parts[1] ?? null;
 
-            // 3. SZUKANIE W BAZIE
-            $skin = Skin::where('name', $skinName)
-                ->whereHas('weapon', function($query) use ($weaponName) {
-                    $query->where('name', $weaponName);
-                })->first();
+            // 3. SEARCH IN DATABASE INDEX
+            $skinId = $skinsMap[$cleanName] ?? null;
 
-            if (!$skin) {
-                $bar->advance();
+            if (!$skinId) {
                 continue;
             }
 
-            // 4. ZAPIS CENY
-            $skin->prices()->updateOrCreate(
+            // 4. WRITE PRICE
+            Price::updateOrCreate(
                 [
+                    'skin_id' => $skinId,
                     'condition' => $condition,
                     'is_stattrak' => $isStatTrak, 
                 ],
@@ -105,11 +120,96 @@ class UpdateSkinsPrices extends Command
                 ]
             );
 
-            $bar->advance();
+            $updatedCount++;
+
+            // Every 500 records, trigger garbage collection to free RAM
+            if ($updatedCount % 500 === 0) {
+                gc_collect_cycles();
+                $this->info("Synced {$updatedCount} price records (Read {$count} JSON nodes)...");
+            }
         }
 
-        $bar->finish();
-        $this->newLine();
-        $this->info('Skins prices updated successfully!');
+        // Clean up temporary file
+        if (file_exists($tempPath)) {
+            unlink($tempPath);
+        }
+
+        $this->info("Completed. Synced {$updatedCount} price records successfully!");
+    }
+
+    /**
+     * Memory-efficient incremental JSON streaming parser.
+     * Yields objects from the "data" array as they are parsed from the file stream.
+     */
+    private function streamJsonItems($filePath)
+    {
+        $handle = fopen($filePath, 'r');
+        if (!$handle) {
+            return;
+        }
+
+        $buffer = '';
+        $nesting = 0;
+        $inString = false;
+        $isEscaped = false;
+
+        while (!feof($handle)) {
+            $chunk = fread($handle, 65536); // Read 64KB chunks
+            $len = strlen($chunk);
+            
+            for ($i = 0; $i < $len; $i++) {
+                $char = $chunk[$i];
+
+                if ($isEscaped) {
+                    $isEscaped = false;
+                    if ($nesting >= 2) {
+                        $buffer .= $char;
+                    }
+                    continue;
+                }
+
+                if ($char === '\\') {
+                    $isEscaped = true;
+                    if ($nesting >= 2) {
+                        $buffer .= $char;
+                    }
+                    continue;
+                }
+
+                if ($char === '"') {
+                    $inString = !$inString;
+                    if ($nesting >= 2) {
+                        $buffer .= $char;
+                    }
+                    continue;
+                }
+
+                if (!$inString) {
+                    if ($char === '{') {
+                        $nesting++;
+                        if ($nesting === 2) {
+                            $buffer = '{';
+                            continue;
+                        }
+                    } elseif ($char === '}') {
+                        $nesting--;
+                        if ($nesting === 1) {
+                            $buffer .= '}';
+                            $item = json_decode($buffer, true);
+                            if (is_array($item)) {
+                                yield $item;
+                            }
+                            $buffer = '';
+                            continue;
+                        }
+                    }
+                }
+
+                if ($nesting >= 2) {
+                    $buffer .= $char;
+                }
+            }
+        }
+        fclose($handle);
     }
 }

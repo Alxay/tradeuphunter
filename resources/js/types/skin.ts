@@ -24,6 +24,11 @@ export interface Skin {
     priceFT?: number;
     priceMW?: number;
     priceFN?: number;
+    stPriceBS?: number;
+    stPriceWW?: number;
+    stPriceFT?: number;
+    stPriceMW?: number;
+    stPriceFN?: number;
     // legacy single price field sometimes used in other pages
     price?: number;
     chance?: number;

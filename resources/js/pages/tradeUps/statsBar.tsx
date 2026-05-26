@@ -32,7 +32,7 @@ export default function StatsBar({
             label: 'Expected Value',
             value: EV != null ? `$${EV.toFixed(2)}` : '—',
             icon: TrendingUp,
-            color: 'text-cyan-400',
+            color: 'text-orange-500',
         },
         {
             label: 'Input Cost',
@@ -81,11 +81,11 @@ export default function StatsBar({
     const floatPercent = Math.max(0, Math.min(avgNormalizedFloat * 100, 100));
 
     return (
-        <div className="mb-6 rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
+        <div className="mb-6 rounded-2xl border border-white/10 bg-slate-900/30 p-5 backdrop-blur-xl">
             {/* Section header */}
             <div className="mb-4 flex items-center gap-2">
-                <Activity className="h-4 w-4 text-cyan-400" />
-                <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-500">
+                <Activity className="h-4 w-4 text-orange-500" />
+                <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-400">
                     Contract Statistics
                 </h2>
             </div>
@@ -95,13 +95,13 @@ export default function StatsBar({
                 {stats.map((stat) => (
                     <div
                         key={stat.label}
-                        className="rounded-xl border border-white/5 bg-white/[0.04] p-3 transition-all duration-200 hover:border-white/10 hover:bg-white/[0.07]"
+                        className="rounded-xl border border-white/5 bg-slate-900/30 p-3 transition-all duration-200 hover:border-orange-500/15 hover:bg-slate-900/50"
                     >
                         <div className="mb-1.5 flex items-center gap-1.5">
                             <stat.icon
                                 className={`h-3.5 w-3.5 ${stat.color}`}
                             />
-                            <span className="text-[11px] text-gray-500">
+                            <span className="text-[11px] text-slate-400">
                                 {stat.label}
                             </span>
                         </div>
@@ -113,28 +113,43 @@ export default function StatsBar({
             </div>
 
             {/* Float visualizer bar */}
-            <div className="mt-4 flex items-center gap-4">
-                <span className="min-w-fit text-xs text-gray-500">
-                    Avg Float
-                </span>
-                <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-gray-800">
+            <div className="mt-6 border-t border-white/5 pt-4">
+                <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
+                    <span className="font-semibold flex items-center gap-1.5">
+                        <Activity className="h-3.5 w-3.5 text-orange-500 animate-pulse" />
+                        Average Contract Float
+                    </span>
+                    <span className="font-mono text-orange-500 font-extrabold text-sm">
+                        {avgNormalizedFloat.toFixed(6)}
+                    </span>
+                </div>
+                
+                {/* Visualizer container */}
+                <div className="relative">
+                    {/* The bar with segments */}
+                    <div className="relative h-3 w-full rounded-full bg-slate-800 flex overflow-hidden border border-white/5">
+                        <div className="h-full bg-emerald-500" style={{ width: '7%' }} title="Factory New (0.00 - 0.07)" />
+                        <div className="h-full bg-green-500" style={{ width: '8%' }} title="Minimal Wear (0.07 - 0.15)" />
+                        <div className="h-full bg-amber-500" style={{ width: '23%' }} title="Field-Tested (0.15 - 0.38)" />
+                        <div className="h-full bg-orange-500" style={{ width: '7%' }} title="Well-Worn (0.38 - 0.45)" />
+                        <div className="h-full bg-red-600" style={{ width: '55%' }} title="Battle-Scarred (0.45 - 1.00)" />
+                    </div>
+
+                    {/* Position marker pointing to the bar */}
                     <div
-                        className="absolute inset-y-0 left-0 rounded-full transition-[width] duration-500 ease-out"
-                        style={{
-                            width: `${floatPercent}%`,
-                            background:
-                                'linear-gradient(90deg, #22c55e, #eab308, #ef4444)',
-                        }}
-                    />
-                    {/* Position marker */}
-                    <div
-                        className="absolute top-1/2 h-3.5 w-1 -translate-y-1/2 rounded-full bg-white shadow-md shadow-white/30 transition-[left] duration-500 ease-out"
-                        style={{ left: `${floatPercent}%` }}
+                        className="absolute -top-1.5 h-6 w-1 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)] transition-[left] duration-500 ease-out z-10"
+                        style={{ left: `${floatPercent}%`, transform: 'translateX(-50%)' }}
                     />
                 </div>
-                <span className="min-w-fit font-mono text-xs text-gray-400">
-                    {avgNormalizedFloat.toFixed(6)}
-                </span>
+
+                {/* Legend / Range labels underneath */}
+                <div className="flex text-[9px] font-bold text-slate-500 mt-1.5 px-0.5">
+                    <div style={{ width: '7%' }} className="text-left text-emerald-400">FN (0.07)</div>
+                    <div style={{ width: '8%' }} className="text-left text-green-400">MW (0.15)</div>
+                    <div style={{ width: '23%' }} className="text-left text-amber-400">FT (0.38)</div>
+                    <div style={{ width: '7%' }} className="text-left text-orange-400">WW (0.45)</div>
+                    <div style={{ width: '55%' }} className="text-left text-red-500">BS (1.00)</div>
+                </div>
             </div>
         </div>
     );

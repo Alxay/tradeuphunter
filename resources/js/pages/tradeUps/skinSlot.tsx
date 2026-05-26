@@ -41,6 +41,7 @@ export default function SkinSlot({
     conditionToPrice,
 }: SkinSlotProps) {
     const [invalidFloat, setInvalidFloat] = useState(false);
+    const [hovered, setHovered] = useState(false);
     const [localFloat, setLocalFloat] = useState<string>(
         skin?.float != null ? String(skin.float) : '',
     );
@@ -54,13 +55,13 @@ export default function SkinSlot({
     if (!skin) {
         return (
             <button
-                className="group flex h-52 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-700/50 bg-white/[0.02] transition-all duration-300 hover:border-cyan-500/30 hover:bg-cyan-500/[0.03] hover:shadow-lg hover:shadow-cyan-500/5"
+                className="group flex h-56 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-800 bg-white/[0.01] transition-all duration-300 hover:border-orange-500/30 hover:bg-orange-500/[0.02] hover:shadow-lg hover:shadow-orange-500/5"
                 onClick={onClick}
             >
-                <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full border border-gray-600/50 text-gray-500 transition-all duration-300 group-hover:border-cyan-500/50 group-hover:text-cyan-400 group-hover:shadow-md group-hover:shadow-cyan-500/20">
+                <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full border border-slate-700/60 text-slate-500 transition-all duration-300 group-hover:border-orange-500/50 group-hover:text-orange-400 group-hover:shadow-md group-hover:shadow-orange-500/25">
                     <Plus className="h-5 w-5" />
                 </div>
-                <span className="text-xs font-medium text-gray-500 transition-colors group-hover:text-cyan-400">
+                <span className="text-xs font-semibold text-slate-500 transition-colors group-hover:text-orange-400">
                     Add Skin
                 </span>
             </button>
@@ -78,9 +79,18 @@ export default function SkinSlot({
 
     return (
         <div
-            className="group relative flex h-52 cursor-pointer flex-col overflow-hidden rounded-xl border border-white/5 bg-white/[0.03] transition-all duration-200 hover:bg-white/[0.06] hover:shadow-lg"
+            className="group relative flex h-56 cursor-pointer flex-col overflow-hidden rounded-2xl border border-white/5 bg-slate-900/35 transition-all duration-300 hover:bg-slate-900/60"
             onClick={onClick}
-            style={{ borderTopColor: rarityColor, borderTopWidth: '3px' }}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+            style={{
+                borderTopColor: rarityColor,
+                borderTopWidth: '3.5px',
+                boxShadow: hovered
+                    ? `0 12px 30px -5px ${rarityColor}35, inset 0 0 12px ${rarityColor}15`
+                    : `0 4px 15px -5px ${rarityColor}12`,
+                borderColor: hovered ? `${rarityColor}30` : undefined,
+            }}
         >
             {/* Action buttons — visible on hover */}
             <div className="absolute right-1 top-1 z-20 flex gap-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
@@ -147,7 +157,7 @@ export default function SkinSlot({
                     className={`w-full rounded border px-1.5 py-0.5 font-mono text-xs outline-none transition-colors ${
                         invalidFloat
                             ? 'border-red-500/50 bg-red-500/10 text-red-400'
-                            : 'border-white/10 bg-white/5 text-gray-300 focus:border-cyan-500/50 focus:bg-cyan-500/5'
+                            : 'border-white/10 bg-white/5 text-gray-300 focus:border-orange-500/50 focus:bg-orange-500/5'
                     }`}
                     onClick={(e) => e.stopPropagation()}
                     onChange={(e) => {

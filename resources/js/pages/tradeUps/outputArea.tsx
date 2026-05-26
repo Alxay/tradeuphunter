@@ -28,7 +28,7 @@ export default function OutputArea({
             <div className="mb-4 flex items-center gap-3">
                 <h2 className="text-lg font-bold text-white">Output</h2>
                 {outputSkins.length > 0 && (
-                    <span className="rounded-full bg-cyan-500/20 px-2.5 py-0.5 text-xs font-semibold text-cyan-400">
+                    <span className="rounded-full bg-orange-500/20 px-2.5 py-0.5 text-xs font-semibold text-orange-400">
                         {outputSkins.length}{' '}
                         {outputSkins.length === 1 ? 'outcome' : 'outcomes'}
                     </span>
@@ -58,29 +58,36 @@ export default function OutputArea({
                         const rarityColor =
                             skin.rarity?.color_hex || '#6b7280';
 
+                        const profitMargin = price - inputCost;
+                        const profitText = profitMargin >= 0 
+                            ? `+$${profitMargin.toFixed(2)}` 
+                            : `-$${Math.abs(profitMargin).toFixed(2)}`;
+
                         return (
                             <div
                                 key={skin.id ?? index}
-                                className={`flex items-center gap-3 rounded-xl border p-3 transition-all duration-200 hover:bg-white/[0.03] ${
+                                className={`flex items-center gap-3 rounded-2xl border p-3 transition-all duration-300 ${
                                     isProfit
-                                        ? 'border-emerald-500/10 bg-emerald-500/[0.02]'
-                                        : 'border-red-500/10 bg-red-500/[0.02]'
+                                        ? 'border-emerald-500/20 bg-emerald-950/10 shadow-[0_0_15px_rgba(16,185,129,0.02)]'
+                                        : 'border-red-500/20 bg-red-950/10 shadow-[0_0_15px_rgba(239,68,68,0.02)]'
                                 }`}
                             >
                                 {/* Skin image */}
-                                <img
-                                    src={skin.image_url}
-                                    alt={skin.name}
-                                    className="h-14 w-14 shrink-0 rounded-lg object-contain"
-                                />
+                                <div className="h-14 w-14 shrink-0 rounded-xl bg-slate-950/40 p-1 flex items-center justify-center border border-white/5">
+                                    <img
+                                        src={skin.image_url}
+                                        alt={skin.name}
+                                        className="max-h-full max-w-full object-contain"
+                                    />
+                                </div>
 
                                 {/* Skin info */}
                                 <div className="min-w-0 flex-1">
-                                    <p className="truncate text-sm font-semibold text-gray-200">
+                                    <p className="truncate text-sm font-bold text-slate-100" title={skin.name}>
                                         {skin.name}
                                     </p>
                                     <p
-                                        className="text-xs font-medium"
+                                        className="text-[10px] font-semibold uppercase tracking-wider"
                                         style={{ color: rarityColor }}
                                     >
                                         {skin.rarity?.name ?? 'Unknown'}
@@ -89,25 +96,25 @@ export default function OutputArea({
                                     {/* Chance bar */}
                                     {skin.chance != null && (
                                         <div className="mt-1.5 flex items-center gap-2">
-                                            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-gray-800">
+                                            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-950">
                                                 <div
-                                                    className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-500"
+                                                    className="h-full rounded-full bg-gradient-to-r from-orange-500 to-amber-500 transition-all duration-500"
                                                     style={{
                                                         width: `${Math.min(skin.chance, 100)}%`,
                                                     }}
                                                 />
                                             </div>
-                                            <span className="shrink-0 font-mono text-xs text-cyan-400">
+                                            <span className="shrink-0 font-mono text-[11px] text-orange-400 font-extrabold">
                                                 {skin.chance.toFixed(1)}%
                                             </span>
                                         </div>
                                     )}
 
                                     {/* Condition + Float row */}
-                                    <div className="mt-1 flex items-center gap-2 text-[10px] text-gray-500">
+                                    <div className="mt-1 flex items-center gap-2 text-[10px] text-slate-500">
                                         {condition && condition !== 'N/A' && (
                                             <span
-                                                className={`rounded px-1 py-0.5 ${
+                                                className={`rounded px-1.5 py-0.5 font-bold ${
                                                     CONDITION_COLORS[
                                                         condition
                                                     ] ?? ''
@@ -117,7 +124,7 @@ export default function OutputArea({
                                             </span>
                                         )}
                                         {skin.float != null && (
-                                            <span className="font-mono">
+                                            <span className="font-mono text-slate-400">
                                                 {skin.float.toFixed(8)}
                                             </span>
                                         )}
@@ -126,18 +133,21 @@ export default function OutputArea({
 
                                 {/* Price + extras */}
                                 <div className="shrink-0 text-right">
-                                    <p
-                                        className={`text-sm font-bold ${
+                                    <p className="text-sm font-extrabold text-white">
+                                        ${price.toFixed(2)}
+                                    </p>
+                                    <span
+                                        className={`text-[11px] font-bold block ${
                                             isProfit
                                                 ? 'text-emerald-400'
                                                 : 'text-red-400'
                                         }`}
                                     >
-                                        ${price.toFixed(2)}
-                                    </p>
+                                        {profitText}
+                                    </span>
                                     {(skin.statTrak == true || String(skin.statTrak) === '1') && (
-                                        <div className="mt-1 inline-block rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-bold text-amber-400 border border-amber-500/30">
-                                            StatTrak™
+                                        <div className="mt-1.5 inline-block rounded bg-amber-500/20 px-1.5 py-0.5 text-[9px] font-extrabold text-amber-400 border border-amber-500/30 uppercase tracking-wider">
+                                            ST™
                                         </div>
                                     )}
                                 </div>
