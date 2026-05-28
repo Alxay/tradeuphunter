@@ -1,4 +1,5 @@
 import { createInertiaApp } from '@inertiajs/react';
+import { hydrateRoot, createRoot } from 'react-dom/client';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { initializeTheme } from '@/hooks/use-appearance';
@@ -16,13 +17,21 @@ createInertiaApp({
         return AppHeaderLayout;
     },
     strictMode: true,
-    withApp(app) {
-        return (
+    setup({ el, App, props }) {
+        const app = (
             <TooltipProvider delayDuration={0}>
-                {app}
+                <App {...props} />
                 <Toaster />
             </TooltipProvider>
         );
+
+        if (el) {
+            if (el.hasAttribute('data-server-rendered')) {
+                hydrateRoot(el, app);
+            } else {
+                createRoot(el).render(app);
+            }
+        }
     },
     progress: {
         color: '#4B5563',

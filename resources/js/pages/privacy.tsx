@@ -150,7 +150,17 @@ export default function Privacy() {
                         {/* Section 8 */}
                         <section className="space-y-2">
                             <h2 className="text-lg font-bold text-orange-500 border-b border-white/5 pb-1">
-                                8. Contact
+                                8. Limitation of Liability (Disclaimer)
+                            </h2>
+                            <p className="text-sm text-slate-300 leading-relaxed">
+                                The simulator and calculation tools on alxay.ninja are provided "as is" for informational and entertainment purposes only. The website owner does not warrant the absolute accuracy of the simulator outcomes or price data, and shall not be held liable for any errors in trade-up contract calculations, simulator results, or any financial or virtual in-game item losses resulting from the use of this website.
+                            </p>
+                        </section>
+
+                        {/* Section 9 */}
+                        <section className="space-y-2">
+                            <h2 className="text-lg font-bold text-orange-500 border-b border-white/5 pb-1">
+                                9. Contact
                             </h2>
                             <p className="text-sm text-slate-300 leading-relaxed">
                                 Please send any inquiries, complaints, or requests regarding privacy to:{' '}
