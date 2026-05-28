@@ -135,6 +135,11 @@ class UpdateSkinsPrices extends Command
         }
 
         $this->info("Completed. Synced {$updatedCount} price records successfully!");
+
+        // Invalidate cached skins/prices data
+        $this->info("Clearing application cache...");
+        \Illuminate\Support\Facades\Cache::flush();
+        $this->info("Cache cleared successfully!");
     }
 
     /**

@@ -93,6 +93,9 @@ export default function SelectSkin({
     const collectionRef = useRef<HTMLDivElement>(null);
     const rarityRef = useRef<HTMLDivElement>(null);
 
+    // Client-side cache for filter results: key -> { data, lastPage, currentPage }
+    const cacheRef = useRef<Record<string, { data: Skin[]; lastPage: number; currentPage: number }>>({});
+
     // Close dropdowns on outside click
     useEffect(() => {
         function handleClickOutside(e: MouseEvent) {
@@ -161,17 +164,35 @@ export default function SelectSkin({
             return;
         }
 
+        const cacheKey = `${collectionFilter}-${rarityFilter}-${statTrakFilter}-${searchQuery}`;
+        if (cacheRef.current[cacheKey]) {
+            const cached = cacheRef.current[cacheKey];
+            setSkins(cached.data);
+            setLastPage(cached.lastPage);
+            setCurrentPage(cached.currentPage);
+            return;
+        }
+
         setIsLoading(true);
         isLoadingMoreRef.current = true;
-        setSkins([]);
         setCurrentPage(1);
 
         axios
             .get('/api/skins', { params: getApiParams(1) })
             .then((res) => {
-                setSkins(res.data.data || []);
-                setLastPage(res.data.last_page || 1);
-                setCurrentPage(res.data.current_page);
+                const fetchedData = res.data.data || [];
+                const fetchedLastPage = res.data.last_page || 1;
+                const fetchedCurrentPage = res.data.current_page || 1;
+
+                cacheRef.current[cacheKey] = {
+                    data: fetchedData,
+                    lastPage: fetchedLastPage,
+                    currentPage: fetchedCurrentPage,
+                };
+
+                setSkins(fetchedData);
+                setLastPage(fetchedLastPage);
+                setCurrentPage(fetchedCurrentPage);
             })
             .catch((err) => console.error('Failed to load skins:', err))
             .finally(() => {
@@ -193,12 +214,23 @@ export default function SelectSkin({
                         params: getApiParams(currentPage + 1),
                     })
                     .then((res) => {
-                        setSkins((prev) => [
-                            ...prev,
-                            ...(res.data.data || []),
-                        ]);
-                        setCurrentPage(res.data.current_page);
-                        setLastPage(res.data.last_page);
+                        const fetchedData = res.data.data || [];
+                        const nextPage = res.data.current_page;
+                        const nextLastPage = res.data.last_page;
+
+                        setSkins((prev) => {
+                            const newSkins = [...prev, ...fetchedData];
+                            const cacheKey = `${collectionFilter}-${rarityFilter}-${statTrakFilter}-${searchQuery}`;
+                            cacheRef.current[cacheKey] = {
+                                data: newSkins,
+                                lastPage: nextLastPage,
+                                currentPage: nextPage,
+                            };
+                            return newSkins;
+                        });
+
+                        setCurrentPage(nextPage);
+                        setLastPage(nextLastPage);
                     })
                     .catch((err) =>
                         console.error('Failed to load more:', err),
@@ -549,7 +581,7 @@ export default function SelectSkin({
                         </div>
                     ) : (
                         <>
-                            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                            <div className={`grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 transition-opacity duration-200 ${isLoading ? 'opacity-40 pointer-events-none' : ''}`}>
                                 {skins
                                     .filter((skin) => getPriceByCondition(skin, conditionFilter) > 0)
                                     .map((skin) => {
