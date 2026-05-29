@@ -1,0 +1,22 @@
+on:
+  push:
+    branches:
+      - ai-vibecoding
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to VPS via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: deployer
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            cd /var/www/tradeuphunter
+            git pull origin ai-vibecoding
+            composer install --no-dev --optimize-autoloader
+            npm install
+            npm run build:ssr
+            sudo systemctl restart tradeuphunter-ssr.service
