@@ -182,10 +182,14 @@ export default function StatsBar({
                             type="text"
                             inputMode="decimal"
                             className="w-28 rounded border border-orange-500/30 bg-orange-500/5 px-2 py-0.5 text-right font-mono text-sm font-extrabold text-orange-500 outline-none transition-colors focus:border-orange-500/60 focus:bg-orange-500/10"
-                            value={floatInputValue || avgNormalizedFloat.toFixed(6)}
-                            onChange={(e) => setFloatInputValue(e.target.value)}
+                            value={floatInputValue || avgNormalizedFloat.toFixed(6).replace('.', ',')}
+                            onChange={(e) => {
+                                const val = e.target.value.replace(/\./g, ',');
+                                setFloatInputValue(val);
+                            }}
                             onBlur={() => {
-                                const parsed = parseFloat(floatInputValue);
+                                const cleanVal = floatInputValue.replace(',', '.');
+                                const parsed = parseFloat(cleanVal);
                                 if (!isNaN(parsed) && parsed >= 0 && parsed <= 1) {
                                     onAvgFloatInput(parsed);
                                 }
@@ -193,7 +197,8 @@ export default function StatsBar({
                             }}
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter') {
-                                    const parsed = parseFloat(floatInputValue);
+                                    const cleanVal = floatInputValue.replace(',', '.');
+                                    const parsed = parseFloat(cleanVal);
                                     if (!isNaN(parsed) && parsed >= 0 && parsed <= 1) {
                                         onAvgFloatInput(parsed);
                                     }
@@ -204,7 +209,7 @@ export default function StatsBar({
                         />
                     ) : (
                         <span className="font-mono text-orange-500 font-extrabold text-sm">
-                            {avgNormalizedFloat.toFixed(6)}
+                            {avgNormalizedFloat.toFixed(6).replace('.', ',')}
                         </span>
                     )}
                 </div>

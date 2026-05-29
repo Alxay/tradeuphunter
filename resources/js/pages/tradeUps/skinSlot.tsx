@@ -22,10 +22,10 @@ const CONDITION_COLORS: Record<string, string> = {
 };
 
 function getConditionFromFloat(float: number): string {
-    if (float >= 0.45) return 'Battle-Scarred';
-    if (float >= 0.38) return 'Well-Worn';
-    if (float >= 0.15) return 'Field-Tested';
-    if (float >= 0.07) return 'Minimal Wear';
+    if (float > 0.45) return 'Battle-Scarred';
+    if (float > 0.38) return 'Well-Worn';
+    if (float > 0.15) return 'Field-Tested';
+    if (float > 0.07) return 'Minimal Wear';
     if (float >= 0) return 'Factory New';
     return 'N/A';
 }
@@ -47,7 +47,9 @@ export default function SkinSlot({
     );
 
     useEffect(() => {
-        setLocalFloat(skin?.float != null ? String(skin.float) : '');
+        setLocalFloat(
+            skin?.float != null ? String(skin.float).replace('.', ',') : '',
+        );
         setInvalidFloat(false);
     }, [skin?.id, skin?.float]);
 
@@ -171,12 +173,10 @@ export default function SkinSlot({
 
                 {/* Float input */}
                 <input
-                    type="number"
+                    type="text"
+                    inputMode="decimal"
                     placeholder="Float"
                     value={localFloat}
-                    min={skin.min_float}
-                    max={skin.max_float}
-                    step={0.01}
                     className={`w-full rounded border px-1.5 py-0.5 font-mono text-xs outline-none transition-colors ${
                         invalidFloat
                             ? 'border-red-500/50 bg-red-500/10 text-red-400'
@@ -184,9 +184,10 @@ export default function SkinSlot({
                     }`}
                     onClick={(e) => e.stopPropagation()}
                     onChange={(e) => {
-                        const raw = e.target.value;
+                        let raw = e.target.value;
+                        raw = raw.replace(/\./g, ',');
                         setLocalFloat(raw);
-                        const value = parseFloat(raw);
+                        const value = parseFloat(raw.replace(',', '.'));
                         
                         if (!Number.isNaN(value)) {
                             const clampedValue = Math.min(
@@ -208,10 +209,11 @@ export default function SkinSlot({
                         }
                     }}
                     onBlur={() => {
-                        const value = parseFloat(localFloat);
+                        const cleanFloat = localFloat.replace(',', '.');
+                        const value = parseFloat(cleanFloat);
                         if (Number.isNaN(value) || localFloat === '') {
                             const fallback = skin.min_float ?? 0;
-                            setLocalFloat(String(fallback));
+                            setLocalFloat(String(fallback).replace('.', ','));
                             updateFloat(position, fallback);
                             setInvalidFloat(false);
                         } else {
@@ -219,7 +221,7 @@ export default function SkinSlot({
                                 skin.max_float ?? 1,
                                 Math.max(skin.min_float ?? 0, value)
                             );
-                            setLocalFloat(String(clamped));
+                            setLocalFloat(String(clamped).replace('.', ','));
                             updateFloat(position, clamped);
                             setInvalidFloat(false);
                         }

@@ -75,11 +75,11 @@ export default function Index({ apiData, collections, rarities }: Props) {
     function getConditionFromFloat(skin: Skin): string {
         if (skin.float == null) return 'N/A';
         const f = skin.float;
-        if (f >= 0 && f < 0.07) return 'Factory New';
-        if (f >= 0.07 && f < 0.15) return 'Minimal Wear';
-        if (f >= 0.15 && f < 0.38) return 'Field-Tested';
-        if (f >= 0.38 && f < 0.45) return 'Well-Worn';
-        if (f >= 0.45 && f <= 1.0) return 'Battle-Scarred';
+        if (f >= 0 && f <= 0.07) return 'Factory New';
+        if (f > 0.07 && f <= 0.15) return 'Minimal Wear';
+        if (f > 0.15 && f <= 0.38) return 'Field-Tested';
+        if (f > 0.38 && f <= 0.45) return 'Well-Worn';
+        if (f > 0.45 && f <= 1.0) return 'Battle-Scarred';
         return 'N/A';
     }
 
