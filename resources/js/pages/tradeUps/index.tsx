@@ -56,20 +56,26 @@ export default function Index({ apiData, collections, rarities }: Props) {
     // ── Utility helpers ──
 
     function conditionToPrice(skin: Skin): number {
+        const isSt = skin.statTrak === true || String(skin.statTrak) === '1';
+        let val: any = 0;
         switch (skin.condition ?? 'Field-Tested') {
             case 'Battle-Scarred':
-                return skin.priceBS ?? 0;
+                val = isSt ? (skin.stPriceBS ?? skin.priceBS) : skin.priceBS;
+                break;
             case 'Well-Worn':
-                return skin.priceWW ?? 0;
+                val = isSt ? (skin.stPriceWW ?? skin.priceWW) : skin.priceWW;
+                break;
             case 'Field-Tested':
-                return skin.priceFT ?? 0;
+                val = isSt ? (skin.stPriceFT ?? skin.priceFT) : skin.priceFT;
+                break;
             case 'Minimal Wear':
-                return skin.priceMW ?? 0;
+                val = isSt ? (skin.stPriceMW ?? skin.priceMW) : skin.priceMW;
+                break;
             case 'Factory New':
-                return skin.priceFN ?? 0;
-            default:
-                return 0;
+                val = isSt ? (skin.stPriceFN ?? skin.priceFN) : skin.priceFN;
+                break;
         }
+        return val ? parseFloat(String(val)) : 0;
     }
 
     function getConditionFromFloat(skin: Skin): string {
