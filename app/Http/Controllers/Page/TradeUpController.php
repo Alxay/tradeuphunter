@@ -125,7 +125,12 @@ class TradeUpController extends Controller
     public function sitemap()
     {
         $sitemap = Sitemap::create();
-        $baseUrl = rtrim(config('app.url', 'https://alxay.ninja'), '/');
+        $host = request()->getHost();
+        if ($host && (str_contains($host, 'localhost') || str_contains($host, '127.0.0.1') || str_ends_with($host, '.test'))) {
+            $baseUrl = rtrim(config('app.url', 'http://tradeuphunter.test'), '/');
+        } else {
+            $baseUrl = 'https://alxay.ninja';
+        }
 
         // Home
         $sitemap->add(Url::create("{$baseUrl}/")
