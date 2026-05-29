@@ -187,7 +187,14 @@ export default function SkinSlot({
                         const raw = e.target.value;
                         setLocalFloat(raw);
                         const value = parseFloat(raw);
-                        updateFloat(position, value);
+                        
+                        if (!Number.isNaN(value)) {
+                            const clampedValue = Math.min(
+                                skin.max_float ?? 1,
+                                Math.max(skin.min_float ?? 0, value)
+                            );
+                            updateFloat(position, clampedValue);
+                        }
 
                         if (
                             raw === '' ||
@@ -198,6 +205,28 @@ export default function SkinSlot({
                             setInvalidFloat(true);
                         } else {
                             setInvalidFloat(false);
+                        }
+                    }}
+                    onBlur={() => {
+                        const value = parseFloat(localFloat);
+                        if (Number.isNaN(value) || localFloat === '') {
+                            const fallback = skin.min_float ?? 0;
+                            setLocalFloat(String(fallback));
+                            updateFloat(position, fallback);
+                            setInvalidFloat(false);
+                        } else {
+                            const clamped = Math.min(
+                                skin.max_float ?? 1,
+                                Math.max(skin.min_float ?? 0, value)
+                            );
+                            setLocalFloat(String(clamped));
+                            updateFloat(position, clamped);
+                            setInvalidFloat(false);
+                        }
+                    }}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                            (e.target as HTMLInputElement).blur();
                         }
                     }}
                 />

@@ -284,7 +284,7 @@ export default function Index({ apiData, collections, rarities }: Props) {
             setOutputSkins((prev) =>
                 prev.map((skin) => {
                     const newFloat =
-                        avgFloat * (skin.max_float - skin.min_float) +
+                        normalizedAvg * (skin.max_float - skin.min_float) +
                         skin.min_float;
                     const updated: Skin = { ...skin, float: newFloat };
                     updated.condition = getConditionFromFloat(updated);
@@ -301,7 +301,7 @@ export default function Index({ apiData, collections, rarities }: Props) {
         axios
             .get('/api/tradeup', {
                 params: {
-                    avgInputFloat: avgFloat,
+                    avgInputFloat: normalizedAvg,
                     rarity: rarityId,
                     collections: collectionIds,
                     statTrak: contractStatTrak,
@@ -311,7 +311,7 @@ export default function Index({ apiData, collections, rarities }: Props) {
                 const processed: Skin[] = (response.data as Skin[]).map(
                     (skin) => {
                         const newFloat =
-                            avgFloat * (skin.max_float - skin.min_float) +
+                            normalizedAvg * (skin.max_float - skin.min_float) +
                             skin.min_float;
                         const updated: Skin = { ...skin, float: newFloat };
                         updated.condition = getConditionFromFloat(updated);
