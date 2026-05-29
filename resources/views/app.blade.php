@@ -112,9 +112,9 @@
             <div id="cookie-consent-banner" class="fixed inset-x-4 bottom-4 z-50 mx-auto max-w-2xl rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-2xl shadow-slate-900/10 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95 sm:inset-x-6 sm:bottom-6">
                 <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div class="space-y-1">
-                        <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">Używamy plików cookie</p>
+                        <p class="text-sm font-semibold text-slate-900 dark:text-slate-100">We use cookies</p>
                         <p class="text-sm leading-6 text-slate-600 dark:text-slate-400">
-                            Korzystamy z Umami, aby mierzyć ruch i poprawiać działanie serwisu. Analityka zostanie włączona dopiero po Twojej zgodzie.
+                            We use Umami to analyze traffic and improve user experience. Analytics will only be loaded with your explicit consent.
                         </p>
                     </div>
 
@@ -124,7 +124,7 @@
                             onclick="declineCookies()"
                             class="inline-flex items-center justify-center rounded-full border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900"
                         >
-                            Odrzuć
+                            Decline
                         </button>
 
                         <button
@@ -132,7 +132,7 @@
                             onclick="acceptCookies()"
                             class="inline-flex items-center justify-center rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
                         >
-                            Akceptuję
+                            Accept
                         </button>
                     </div>
                 </div>

@@ -1,7 +1,8 @@
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import axios from 'axios';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Search, Loader2, Coins, Clock, AlertCircle } from 'lucide-react';
+import { getSkinSlug } from '@/lib/utils';
 
 interface Rarity {
     id: number;
@@ -511,9 +512,10 @@ export default function Index({ apiData, collections, rarities }: Props) {
                                     const rarityColor = skin.rarity?.color_hex || '#6b7280';
 
                                     return (
-                                        <div
+                                        <Link
                                             key={skin.id}
-                                            className="group overflow-hidden rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/15 transition-all duration-300 hover:shadow-xl hover:shadow-orange-500/[0.02]"
+                                            href={`/skin/${skin.id}-${getSkinSlug(skin.weapon?.name, skin.name)}`}
+                                            className="group block overflow-hidden rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/15 transition-all duration-300 hover:shadow-xl hover:shadow-orange-500/[0.02]"
                                             style={{
                                                 borderTopColor: rarityColor,
                                                 borderTopWidth: '3.5px',
@@ -584,7 +586,7 @@ export default function Index({ apiData, collections, rarities }: Props) {
                                                     Float: <span className="text-slate-400">{skin.min_float.toFixed(2)}</span> – <span className="text-slate-400">{skin.max_float.toFixed(2)}</span>
                                                 </p>
                                             </div>
-                                        </div>
+                                        </Link>
                                     );
                                 })}
                         </div>
