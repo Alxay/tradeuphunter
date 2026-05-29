@@ -329,7 +329,10 @@ export default function Index({ apiData, collections, rarities }: Props) {
 
     return (
         <>
-            <Head title="Trade-Up Simulator" />
+            <Head title="Trade-Up Simulator">
+                <meta name="description" content="Calculate outcomes, floats, wear tiers, EV, and ROI for CS2 trade-up contracts with mathematical models and live Steam prices." />
+                <meta name="keywords" content="cs2 tradeup calculator, trade up simulator, cs2 trade contract, float calculator cs2, skin tradeup profit" />
+            </Head>
             <div className="min-h-[90vh] bg-background p-6 text-white">
                 {/* ── Page Header ── */}
                 <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-5">

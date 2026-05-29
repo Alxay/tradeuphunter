@@ -5,7 +5,9 @@ import AppLogoIcon from '@/components/app-logo-icon';
 export default function Privacy() {
     return (
         <>
-            <Head title="Privacy Policy - alxay.ninja" />
+            <Head title="Privacy Policy">
+                <meta name="description" content="Privacy Policy for TradeUpHunter. Read about controller info, analytics cookies, affiliate disclosures, and data protection terms." />
+            </Head>
             <div className="relative min-h-screen bg-[#070a10] text-slate-100 overflow-hidden font-sans selection:bg-orange-500 selection:text-black">
                 {/* Glowing decorative background grids */}
                 <div className="absolute inset-0 bg-[linear-gradient(to_right,#0f172a_1px,transparent_1px),linear-gradient(to_bottom,#0f172a_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-35" />

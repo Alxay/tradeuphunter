@@ -254,7 +254,10 @@ export default function Index({ apiData, collections, rarities }: Props) {
 
     return (
         <>
-            <Head title="Skins Database" />
+            <Head title="Skins Database">
+                <meta name="description" content="Browse weapon finishes and track real-time Steam market prices. A complete database of CS2 skins with floats, rarities, and 30d/90d averages." />
+                <meta name="keywords" content="cs2 skins database, steam skin prices, cs2 skin values, wear float checker, counter strike skins database" />
+            </Head>
             <div className="pageContent min-h-[90vh] bg-background p-6 text-white">
                 {/* ── Page Header ── */}
                 <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-5">

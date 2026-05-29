@@ -6,7 +6,16 @@ export default function Welcome() {
 
     return (
         <>
-            <Head title="CS2 Trade-Up Simulator & Skins Price Tracker" />
+            <Head title="CS2 Trade-Up Simulator & Skins Price Tracker">
+                <meta name="description" content="The ultimate CS2 Trade-Up Simulator. Calculate exact outcomes, floats, wear tiers, EV, and ROI using real-time database prices tracked from the Steam market." />
+                <meta name="keywords" content="cs2 tradeup simulator, cs2 trade up calculator, steam skins prices, cs2 tradeup EV, cs2 profitability tracker, counter strike 2 skins" />
+                <meta property="og:title" content="CS2 Trade-Up Simulator & Skins Price Tracker" />
+                <meta property="og:description" content="Calculate exact outcomes, floats, EV, and ROI with mathematical precision and live Steam prices." />
+                <meta property="og:type" content="website" />
+                <meta property="twitter:card" content="summary_large_image" />
+                <meta property="twitter:title" content="CS2 Trade-Up Simulator & Skins Price Tracker" />
+                <meta property="twitter:description" content="Calculate exact outcomes, floats, EV, and ROI with mathematical precision and live Steam prices." />
+            </Head>
             
             <div className="relative min-h-screen bg-[#070a10] text-slate-100 overflow-hidden font-sans selection:bg-orange-500 selection:text-black">
                 {/* Glowing decorative background grids */}
